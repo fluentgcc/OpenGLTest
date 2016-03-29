@@ -113,6 +113,9 @@
     <ClCompile Include="OpenGL\Camera\TargetCamera.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="OpenGL\FZFont.cpp" />
+    <ClCompile Include="OpenGL\FZFontManager.cpp" />
+    <ClCompile Include="OpenGL\FZLayout.cpp" />
     <ClCompile Include="OpenGL\GLSLShader.cpp" />
     <ClCompile Include="OpenGL\GLTexture.cpp" />
     <ClCompile Include="OpenGL\RenderableObjects\RenderableObject.cpp" />
@@ -170,6 +173,9 @@
     <ClInclude Include="OpenGL\Camera\TargetCamera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
+    <ClInclude Include="OpenGL\FZFont.h" />
+    <ClInclude Include="OpenGL\FZFontManager.hpp" />
+    <ClInclude Include="OpenGL\FZLayout.h" />
     <ClInclude Include="OpenGL\GLSLShader.h" />
     <ClInclude Include="OpenGL\GLTexture.h" />
     <ClInclude Include="OpenGL\RenderableObjects\RenderableObject.h" />
@@ -177,6 +183,8 @@
     <ClInclude Include="OpenGL\TextPainter.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\text.frag" />
+    <None Include="shaders\text.vert" />
     <None Include="shaders\triangle.frag" />
     <None Include="shaders\triangle.vert" />
   </ItemGroup>

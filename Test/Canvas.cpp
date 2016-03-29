@@ -1,4 +1,4 @@
-#include "Canvas.h"
+Ôªø#include "Canvas.h"
 
 #include <iostream>
 #include <string>
@@ -11,9 +11,10 @@
 #include "Triangle.h"
 
 #include <ft2build.h>
-
 #include FT_FREETYPE_H
+#include <FTGL/ftgl.h>
 
+#include "FZFont.h"
 
 #define GL_CHECK_ERRORS assert( glGetError()== GL_NO_ERROR );
 
@@ -23,7 +24,10 @@ const int WIDTH  = 1280;
 const int HEIGHT = 960;
 
 
+FZFont* fzfont;
 
+FTFont* FONT;
+FTSimpleLayout* LAYOUT;
 
 Canvas::Canvas(QWidget *parent)
 	: QOpenGLWidget(parent)
@@ -44,53 +48,53 @@ Canvas::~Canvas()
 
 void Canvas::initFBO()
 {
-// 	//≤˙…˙FBO;
-// 	glGenFramebuffers( 1, &this->g_fbo_id_ );
-// 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, this->g_fbo_id_ );
-// 	//≤˙…˙RBO;
-// 	glGenRenderbuffers( 1, &this->g_rbo_id_ );
-// 	glBindRenderbufferEXT( GL_RENDERBUFFER, this->g_rbo_id_ );
-// 	//…Ë÷√RBO¥Ê¥¢;
-// 	glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, WIDTH, HEIGHT );
-// 
-// 	//≤˙…˙”√”⁄¿Î∆¡‰÷»æµƒtexture;
-// 	glGenTextures( 1, &this->g_tex_render_id_ );
-// 	glBindTexture( GL_TEXTURE_2D, this->g_tex_render_id_ );
-// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-// 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, WIDTH, HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL );
-// 
-// 	//£°FBO≤¢√ª”–»Œ∫ŒÕºœÒ¥Ê¥¢£¨µ´ «”–∂‡∏ˆπ“øøµ„£¨
-// 	//£∫—’…´color£®ø…ƒ‹”–∂‡∏ˆ£¨Œ™¡À‰÷»æµΩ∂‡∏ˆƒø±Í£©£¨…Ó∂»depth£¨ƒ£∞Âstencil£ª
-// 	//: FBO«–ªªπ“øøµƒÕºœÒÀŸ∂»∫‹øÏ£¨“™±»«–ªªFBOøÏ;
-// 
-// 	//Ω´Œ∆¿Ì∞Û∂®µΩFBOµƒ—’…´π“øøµ„ (color attachment);
-// 	glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_tex_render_id_, 0 );
-// 	
-// 	//Ω´RBO∞Û∂®µΩFBOµƒ…Ó∂»π“øøµ„ (depth attachment);
-// 	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, this->g_fbo_id_ );
-// 
-// 	//ºÏ≤ÈFBO◊¥Ã¨;
-// 	GLuint status = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
-// 	if ( GL_FRAMEBUFFER_COMPLETE == status )
-// 	{
-// 		std::cout << "Sucess: FBO init  \n";
-// 	} 
-// 	else
-// 	{	
-// 		std::cout << "Error: FBO init \n";
-// 	}
-// 
-// 	glBindTexture( GL_TEXTURE_2D, 0 );
-// 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
+	// 	//‰∫ßÁîüFBO;
+	// 	glGenFramebuffers( 1, &this->g_fbo_id_ );
+	// 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, this->g_fbo_id_ );
+	// 	//‰∫ßÁîüRBO;
+	// 	glGenRenderbuffers( 1, &this->g_rbo_id_ );
+	// 	glBindRenderbufferEXT( GL_RENDERBUFFER, this->g_rbo_id_ );
+	// 	//ËÆæÁΩÆRBOÂ≠òÂÇ®;
+	// 	glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT32, WIDTH, HEIGHT );
+	// 
+	// 	//‰∫ßÁîüÁî®‰∫éÁ¶ªÂ±èÊ∏≤ÊüìÁöÑtexture;
+	// 	glGenTextures( 1, &this->g_tex_render_id_ );
+	// 	glBindTexture( GL_TEXTURE_2D, this->g_tex_render_id_ );
+	// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+	// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+	// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+	// 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+	// 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, WIDTH, HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL );
+	// 
+	// 	//ÔºÅFBOÂπ∂Ê≤°Êúâ‰ªª‰ΩïÂõæÂÉèÂ≠òÂÇ®Ôºå‰ΩÜÊòØÊúâÂ§ö‰∏™ÊåÇÈù†ÁÇπÔºå
+	// 	//ÔºöÈ¢úËâ≤colorÔºàÂèØËÉΩÊúâÂ§ö‰∏™Ôºå‰∏∫‰∫ÜÊ∏≤ÊüìÂà∞Â§ö‰∏™ÁõÆÊ†áÔºâÔºåÊ∑±Â∫¶depthÔºåÊ®°ÊùøstencilÔºõ
+	// 	//: FBOÂàáÊç¢ÊåÇÈù†ÁöÑÂõæÂÉèÈÄüÂ∫¶ÂæàÂø´ÔºåË¶ÅÊØîÂàáÊç¢FBOÂø´;
+	// 
+	// 	//Â∞ÜÁ∫πÁêÜÁªëÂÆöÂà∞FBOÁöÑÈ¢úËâ≤ÊåÇÈù†ÁÇπ (color attachment);
+	// 	glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->g_tex_render_id_, 0 );
+	// 	
+	// 	//Â∞ÜRBOÁªëÂÆöÂà∞FBOÁöÑÊ∑±Â∫¶ÊåÇÈù†ÁÇπ (depth attachment);
+	// 	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, this->g_fbo_id_ );
+	// 
+	// 	//Ê£ÄÊü•FBOÁä∂ÊÄÅ;
+	// 	GLuint status = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
+	// 	if ( GL_FRAMEBUFFER_COMPLETE == status )
+	// 	{
+	// 		std::cout << "Sucess: FBO init  \n";
+	// 	} 
+	// 	else
+	// 	{	
+	// 		std::cout << "Error: FBO init \n";
+	// 	}
+	// 
+	// 	glBindTexture( GL_TEXTURE_2D, 0 );
+	// 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 );
 
 }
 
 void Canvas::initializeGL()
 {
-//≥ı ºªØglew;-------------------------------------
+	//ÂàùÂßãÂåñglew;-------------------------------------
 	glewExperimental = GL_TRUE;
 
 	GLenum err = glewInit();
@@ -110,53 +114,60 @@ void Canvas::initializeGL()
 	err = glGetError();
 	GL_CHECK_ERRORS
 
-	std::cout << "\tUsing GLEW "	<< glewGetString( GLEW_VERSION )<<endl;
+		std::cout << "\tUsing GLEW "	<< glewGetString( GLEW_VERSION )<<endl;
 	std::cout << "\tVendor: "		<< glGetString (  GL_VENDOR )<<endl;
 	std::cout << "\tRenderer: "		<< glGetString (  GL_RENDERER )<<endl;
 	std::cout << "\tVersion: "		<< glGetString (  GL_VERSION )<<endl;
 	std::cout << "\tGLSL: "			<< glGetString (  GL_SHADING_LANGUAGE_VERSION )<<endl;
 	GL_CHECK_ERRORS
-//-------------------------------------------------
+		//-------------------------------------------------
 
-	glEnable( GL_DEPTH_TEST );
+		glEnable( GL_DEPTH_TEST );
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-//-------------------------------------------
+	//-------------------------------------------
 
 	this->triangle_ = new CTriangle();
 
 //-------------------------------------------
-	FT_Library ft;
-	if ( FT_Init_FreeType( &ft ) )
-	{
-		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+	//FreeType
+// 
+// 	FT_Library ft;
+// 	if ( FT_Init_FreeType( &ft ) )
+// 	{
+// 		std::cout << "ERROR::FREETYPE: Could not init FreeType Library" << std::endl;
+// 	}
+// 
+// 	FT_Face face;
+// 	if ( FT_New_Face( ft, "C:/Windows/Fonts/arial.ttf", 0, &face ) )
+// 	{
+// 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl; 
+// 	}
+// 
+// 	FT_Set_Pixel_Sizes( face, 0, 48);
+//---------------------------------------------
+	//FTGL
+	FONT = new FTTextureFont( "C:/Windows/Fonts/msyh.ttf"  );
+
+	if( FONT->Error() )
+	{	
+		std::cout <<  " Â≠ó‰ΩìÂàõÂª∫Â§±Ë¥• " << std::endl;
 	}
 
-	FT_Face face;
-	if ( FT_New_Face( ft, "C:/Windows/Fonts/arial.ttf", 0, &face ) )
-	{
-		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl; 
+	FONT->FaceSize( 32 );
+
+	if( FONT->Error() )
+	{	
+		std::cout << " Â≠ó‰ΩìÂ§ßÂ∞èËÆæÁΩÆÂ§±Ë¥• " <<std::endl;
 	}
 
-	 FT_Set_Pixel_Sizes( face, 0, 48);
-	//---------------------------------------------
+	LAYOUT = new FTSimpleLayout();
+	LAYOUT->SetFont( FONT );
+	LAYOUT->SetLineSpacing( 1.0 );
+	LAYOUT->SetAlignment( FTGL::ALIGN_LEFT );
+//--------------------------------------------
+	//fzfont = new FZFont( "C:/Windows/Fonts/msyh.ttf" );
 
-	 std::string s1 =  QString::fromLocal8Bit( "◊÷ÃÂ" ).toStdString();
-	 std::string s2 = "aa";
-	 std::wstring s3  = L"◊÷ÃÂ";
-	 std::wstring s4  =  QString::fromLocal8Bit( "◊÷ÃÂ" ).toStdWString();
-	 auto sz = s1.size();
-	 auto sz2 = s2.size();
-	 int a = s1[0];
-
-
-	 int c = 0;
-	 for ( auto it = s3.begin(); it != s3.end(); it++) 
-	 {
-		 ++c;
-	 }
-
-	 int z =32;
 
 }
 
@@ -167,21 +178,44 @@ void Canvas::paintGL()
 	//glm::mat4 P = this->camera_->getProjectionMatrix();
 	//glm::mat4 V = this->camera_->getViewMatrix();
 
+	glEnable( GL_BLEND );
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+	glOrtho( 0, this->width_, 0, this->height_, 1, -1 );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+	glColor3f( 1.0,0.0,0.0 );
+	FONT->Render( L"ÂõæÂõæÂΩ¢ \n aa", -1, FTPoint( 50,50 ) );
+
+	LAYOUT->Render(  L"ÂõæÂΩ¢", -1, FTPoint(), FTGL::RENDER_ALL );
+
+	LAYOUT->Render(  L"ÂõæÂΩ¢", -1, FTPoint(), FTGL::RENDER_ALL );
+
+	FTBBox box = LAYOUT->BBox( L"ÂõæÂΩ¢" );
+
 	glm::mat4 P = this->camera_->getProjectionMatrix();
 	glm::mat4 V = this->camera_->getViewMatrix();
 
 	this->triangle_->render( glm::value_ptr( P*V ) );
+	//fzfont->renderText( std::wstring( L"ÂõæÂÉè‰ø°ÊÅØ" ),glm::vec3( 0.0, 0.0, -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
+
 }
 
 void Canvas::resizeGL( int w, int h )
 {
+
+	this->width_ = w;
+	this->height_ = h;
+
 	glViewport ( 0, 0, ( GLsizei ) w, ( GLsizei ) h );
 
-	//Õ∂”∞----- ”æ∞ÃÂ; ∂‘≥∆Õ∏ ”Õ∂”∞;
+	//ÊäïÂΩ±-----ËßÜÊôØ‰Ωì; ÂØπÁß∞ÈÄèËßÜÊäïÂΩ±;
 	//P = glm::perspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );				
-	//	P = glm::ortho( -1, 1, -1, 1 ); //’˝ΩªÕ∂”∞;
+	//	P = glm::ortho( -1, 1, -1, 1 ); //Ê≠£‰∫§ÊäïÂΩ±;
 
-	// ”Õº-----œ‡ª˙Œª÷√£¨ ”œﬂ÷––ƒ£¨…œ∑ΩœÚ;
+	//ËßÜÂõæ-----Áõ∏Êú∫‰ΩçÁΩÆÔºåËßÜÁ∫ø‰∏≠ÂøÉÔºå‰∏äÊñπÂêë;
 	//MV = glm::lookAt( glm::vec3( 0, 0, 0 ), glm::vec3( 0, 0, -100 ), glm::vec3( 0, 1, 0 ) );
 
 	//this->camera_->setPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f  );
@@ -203,7 +237,7 @@ void Canvas::mouseMoveEvent( QMouseEvent* event )
 
 	float delta_x = ( p.x() - this->pos0_.x() ) * 0.1;
 	float delta_y = ( p.y() - this->pos0_.y() ) * 0.1;
-	
+
 	//this->camera_->translate( glm::vec3( delta_x, - delta_y, 0.0 ) );
 
 	//this->camera_->rotate( -delta_x, -delta_y, 0 );
@@ -217,10 +251,10 @@ void Canvas::mouseMoveEvent( QMouseEvent* event )
 void Canvas::mousePressEvent( QMouseEvent* event )
 {
 	this->pos0_ = event->pos();
-// 
-// 	if( Qt::RightButton == event->buttons() )
-// 	{
-// 	}
+	// 
+	// 	if( Qt::RightButton == event->buttons() )
+	// 	{
+	// 	}
 
 }
 
@@ -236,12 +270,12 @@ void Canvas::wheelEvent(QWheelEvent * event)
 
 	int a = event->delta();
 	float b = 1 + a / 1000.0;
-	
+
 	//this->camera_->zoom( b );
 
 	//this->camera_->zoom ( a  /1000.0f);
 	this->camera_->move(0, 0, a/1000.0 );
-	
+
 	this->update();
 
 	event->accept();
