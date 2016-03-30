@@ -14,7 +14,7 @@
 #include "GLCamera.h"
 
 
-class CTriangle;
+class CRectangle;
 
 class Canvas : public QOpenGLWidget
 {
@@ -23,8 +23,6 @@ class Canvas : public QOpenGLWidget
 public:
 	Canvas(QWidget *parent = 0);
 	~Canvas();
-
-	void initFBO();
 
 protected:
 	virtual void initializeGL();
@@ -46,7 +44,7 @@ private:
 
 	GLuint g_tex_render_id_;	//offscreen render texture ID
 // 
- 	CTriangle* triangle_;
+ 	CRectangle* rectangle_;
 	Camera* camera_;
 	
 	QPoint pos0_;

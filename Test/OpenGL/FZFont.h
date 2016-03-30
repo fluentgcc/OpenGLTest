@@ -36,7 +36,7 @@ public:
 
 	void initFrequency();
 
-
+	Character getCharactor( unsigned int code ){ return characters_[ code ]; }
 
 protected:
 	bool checkGlyph( unsigned int );

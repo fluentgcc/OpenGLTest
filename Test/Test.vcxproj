@@ -119,8 +119,10 @@
     <ClCompile Include="OpenGL\GLSLShader.cpp" />
     <ClCompile Include="OpenGL\GLTexture.cpp" />
     <ClCompile Include="OpenGL\RenderableObjects\RenderableObject.cpp" />
-    <ClCompile Include="OpenGL\RenderableObjects\Triangle.cpp" />
-    <ClCompile Include="OpenGL\TextPainter.cpp" />
+    <ClCompile Include="OpenGL\RenderableObjects\Rectangle.cpp" />
+    <ClCompile Include="OpenGL\TextPainter.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="myWidget.h">
@@ -179,8 +181,10 @@
     <ClInclude Include="OpenGL\GLSLShader.h" />
     <ClInclude Include="OpenGL\GLTexture.h" />
     <ClInclude Include="OpenGL\RenderableObjects\RenderableObject.h" />
-    <ClInclude Include="OpenGL\RenderableObjects\Triangle.h" />
-    <ClInclude Include="OpenGL\TextPainter.h" />
+    <ClInclude Include="OpenGL\RenderableObjects\Rectangle.h" />
+    <ClInclude Include="OpenGL\TextPainter.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\text.frag" />
