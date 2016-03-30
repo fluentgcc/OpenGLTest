@@ -187,10 +187,10 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\rectangle.frag" />
+    <None Include="shaders\rectangle.vert" />
     <None Include="shaders\text.frag" />
     <None Include="shaders\text.vert" />
-    <None Include="shaders\triangle.frag" />
-    <None Include="shaders\triangle.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
