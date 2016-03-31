@@ -115,6 +115,7 @@
     </ClCompile>
     <ClCompile Include="OpenGL\FZFont.cpp" />
     <ClCompile Include="OpenGL\FZFontManager.cpp" />
+    <ClCompile Include="OpenGL\FZGlyph.cpp" />
     <ClCompile Include="OpenGL\FZLayout.cpp" />
     <ClCompile Include="OpenGL\GLSLShader.cpp" />
     <ClCompile Include="OpenGL\GLTexture.cpp" />
@@ -177,6 +178,7 @@
     </ClInclude>
     <ClInclude Include="OpenGL\FZFont.h" />
     <ClInclude Include="OpenGL\FZFontManager.hpp" />
+    <ClInclude Include="OpenGL\FZGlyph.h" />
     <ClInclude Include="OpenGL\FZLayout.h" />
     <ClInclude Include="OpenGL\GLSLShader.h" />
     <ClInclude Include="OpenGL\GLTexture.h" />

@@ -78,7 +78,7 @@ void Canvas::initializeGL()
 
 	glClearColor( 0.2f, 0.3f, 0.3f, 1.0f );
 
-	this->rectangle_ = new CRectangle();
+	//this->rectangle_ = new CRectangle();
 
 //--------------------------------------------
 	fzfont = new FZFont( "C:/Windows/Fonts/msyh.ttf" );
@@ -91,7 +91,7 @@ void Canvas::paintGL()
 	glm::mat4 P = this->camera_->getProjectionMatrix();
 	glm::mat4 V = this->camera_->getViewMatrix();
 
-	this->rectangle_->render( glm::value_ptr( P*V ) );
+	//this->rectangle_->render( glm::value_ptr( P*V ) );
 	fzfont->renderText( std::wstring( L"ab" ),glm::vec3( 0.0, 0.0, -0.5 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
 
 
