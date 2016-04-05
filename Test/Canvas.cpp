@@ -82,6 +82,12 @@ void Canvas::initializeGL()
 
 //--------------------------------------------
 	fzfont = new FZFont( "C:/Windows/Fonts/msyh.ttf" );
+//--------------------------------------------
+
+// 	glEnable(GL_CULL_FACE);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 }
 
 void Canvas::paintGL()
@@ -92,8 +98,16 @@ void Canvas::paintGL()
 	glm::mat4 V = this->camera_->getViewMatrix();
 
 	//this->rectangle_->render( glm::value_ptr( P*V ) );
-	fzfont->renderText( std::wstring( L"ab" ),glm::vec3( 0.0, 0.0, -0.5 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
+// 	for ( unsigned int i = 0; i < 100; ++ i ) 
+// 	{
+// 
+// 		float de = i /100;
+// 		fzfont->renderText( std::wstring( L"abcd.?...{}[+-gthzsaehjkrhekrqjekwjkvkewqhrjhlalkdjfhkq" ),glm::vec3( -1.0 , 0.5 -de , -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
+// 
+// 	}
 
+	fzfont->renderText( std::wstring( L"abcd.?...{}[+-gthz" ),glm::vec3( -1.0, 0.5, -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
+	fzfont->renderText( std::wstring( L"aadfdfdfdf" ),glm::vec3( -1.0, 0.4, -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
 
 //	Character c = fzfont->getCharactor( 71 );
 //
@@ -120,6 +134,14 @@ void Canvas::resizeGL( int w, int h )
 	glViewport ( 0, 0, ( GLsizei ) w, ( GLsizei ) h );
 	this->camera_->setPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );
 	this->camera_->lookAt( glm::vec3( 0, 0, 0 ), glm::vec3( 0, 0, -100 ), glm::vec3( 0, 1, 0 ) );
+
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+
+	gluPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );
+
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
 
 }
 

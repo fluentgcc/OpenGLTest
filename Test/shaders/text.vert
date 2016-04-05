@@ -1,12 +1,14 @@
 #version 330
-layout (location = 0) in vec3 vVertex;
-layout (location = 1) in vec2 vTexCoord;
-out vec2 TexCoords;
 
 uniform mat4 MVP;
 
-void main()
+layout (location = 0) in vec4 vVertex;
+layout (location = 1) in vec2 vTextCoord;
+
+out vec2 textCoord;
+
+void main(void)
 {
-    gl_Position = MVP * vec4(vVertex.xyz, 1.0);
-    TexCoords = vTexCoord;
+	textCoord = vTextCoord;
+    gl_Position = MVP * vVertex;
 }

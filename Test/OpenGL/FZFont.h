@@ -3,6 +3,8 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_GLYPH_H
+
 
 #include "GLSLShader.h"
 #include <map>
@@ -51,7 +53,7 @@ private:
 	FT_Library ft_library_;
 	FT_Face ft_face_;
 
-	GLuint VAO, VBO;
+	GLuint vaoID_, vboVerticesID_, vboIndicesID_;
 
 };
 

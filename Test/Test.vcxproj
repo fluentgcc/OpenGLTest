@@ -17,6 +17,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -41,8 +42,8 @@
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BOOST_PATH);$(DCMTK_PATH)\$(Configuration)\include;$(GLEW_PATH)\include;$(FREETYPE)\include;$(FTGL)\include;D:\lib\SOIL\src;.\OpenGL;.\OpenGL\RenderableObjects;.\OpenGL\Camera;$(IncludePath)</IncludePath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(DCMTK_PATH)\$(Configuration)\lib;$(BOOST_PATH)\stage\lib;$(GLEW_PATH)\lib;$(FREETYPE)\lib;$(FTGL)\library;D:\lib\SOIL\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(BOOST_PATH);$(DCMTK_PATH)\$(Configuration)\include;$(GLEW_PATH)\include;D:\lib\freetype2\install\include;$(FTGL)\include;D:\lib\SOIL\src;.\OpenGL;.\OpenGL\RenderableObjects;.\OpenGL\Camera;.\freetype-gl;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(DCMTK_PATH)\$(Configuration)\lib;$(BOOST_PATH)\stage\lib;$(GLEW_PATH)\lib;D:\lib\freetype2\install\lib;$(FTGL)\library;D:\lib\SOIL\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -80,6 +81,28 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Canvas.cpp" />
+    <ClCompile Include="freetype-gl\distance-field.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="freetype-gl\edtaa3func.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="freetype-gl\font-manager.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="freetype-gl\makefont.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="freetype-gl\platform.cpp" />
+    <ClCompile Include="freetype-gl\text-buffer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="freetype-gl\texture-atlas.cpp" />
+    <ClCompile Include="freetype-gl\texture-font.cpp" />
+    <ClCompile Include="freetype-gl\utf8-utils.cpp" />
+    <ClCompile Include="freetype-gl\vector_t.c" />
+    <ClCompile Include="freetype-gl\vertex-attribute.cpp" />
+    <ClCompile Include="freetype-gl\vertex-buffer.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_Canvas.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -163,6 +186,30 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="freetype-gl\distance-field.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="freetype-gl\edtaa3func.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="freetype-gl\font-manager.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="freetype-gl\freetype-gl.h" />
+    <ClInclude Include="freetype-gl\markup.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="freetype-gl\opengl.h" />
+    <ClInclude Include="freetype-gl\platform.h" />
+    <ClInclude Include="freetype-gl\text-buffer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="freetype-gl\texture-atlas.h" />
+    <ClInclude Include="freetype-gl\texture-font.h" />
+    <ClInclude Include="freetype-gl\utf8-utils.h" />
+    <ClInclude Include="freetype-gl\vector_t.h" />
+    <ClInclude Include="freetype-gl\vertex-attribute.h" />
+    <ClInclude Include="freetype-gl\vertex-buffer.h" />
     <ClInclude Include="OpenGL\Camera\AbstractCamera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>

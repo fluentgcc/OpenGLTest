@@ -17,46 +17,70 @@ FZFont::FZFont(const char* file_path )
 	}
 
 	this->setFaceSize( 48 );
-
-	assert( glGetError()== GL_NO_ERROR );
-
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-
-	this->shader_.LoadFromFile( GL_VERTEX_SHADER,   "shaders/text.vert" );
-	this->shader_.LoadFromFile( GL_FRAGMENT_SHADER, "shaders/text.frag" );
-	this->shader_.CreateAndLinkProgram();
-	this->shader_.Use();
+//--------------------------------
+	glEnable( GL_TEXTURE_2D );
+	this->initFrequency();
+//--------------------------------
+	shader_.LoadFromFile( GL_VERTEX_SHADER,   "shaders/text.vert" );
+	shader_.LoadFromFile( GL_FRAGMENT_SHADER, "shaders/text.frag" );
+	shader_.CreateAndLinkProgram();
+	shader_.Use();
 	{
-		this->shader_.AddAttribute("vVertex" ); 
-		this->shader_.AddAttribute("vTexCoord" );
-		this->shader_.AddUniform( "MVP" );
-		this->shader_.AddUniform( "vColor" );
-		this->shader_.AddUniform( "text" );
+		shader_.AddAttribute("vVertex"); 
+		shader_.AddUniform("MVP");
+		shader_.AddAttribute("vTextCoord");
+		//glUniform3fv( shader_("vColor"),1, glm::value_ptr( color ) );
 	}
-	this->shader_.UnUse();
+	shader_.UnUse();
+//--------------------------------
+	glGenVertexArrays( 1, &this->vaoID_ );
+	glGenBuffers( 1, &this->vboVerticesID_ );
+	glGenBuffers( 1, &this->vboIndicesID_ );
 
-	glGenVertexArrays( 1, &VAO );
-	glGenBuffers( 1, &VBO );
-	glBindVertexArray( VAO );
-	glBindBuffer( GL_ARRAY_BUFFER, VBO );
-	glBufferData( GL_ARRAY_BUFFER, sizeof(GLfloat) * 6 * 5, NULL, GL_DYNAMIC_DRAW );
-		
-	assert( glGetError()== GL_NO_ERROR );
-	
-	glEnableVertexAttribArray(  this->shader_[ "vVertex" ] );
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0 );
+	glBindVertexArray( this->vaoID_ );
+	{
+		glBindBuffer( GL_ARRAY_BUFFER, vboVerticesID_ );
+		glBufferData( GL_ARRAY_BUFFER, 6 * 4 * sizeof( GLfloat ), nullptr, GL_STATIC_DRAW );
 
-	glEnableVertexAttribArray( this->shader_[ "vTexCoord" ] );
-	glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), 0 );
+		assert( glGetError()== GL_NO_ERROR );
 
-	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		glEnableVertexAttribArray( this->shader_[ "vVertex" ] );
+		glVertexAttribPointer( shader_[ "vVertex" ], 4, GL_FLOAT, GL_FALSE, 0, NULL );
+		assert( glGetError()== GL_NO_ERROR );
+
+		glEnableVertexAttribArray( this->shader_[ "vTextCoord" ] );
+		glVertexAttribPointer( shader_[ "vTextCoord" ], 2, GL_FLOAT, GL_FALSE, 0, ( const GLvoid * ) ( 16 * sizeof( GLfloat ) ) );
+
+		assert( glGetError()== GL_NO_ERROR );
+
+		const GLfloat text_pos[] =
+		{
+			0.0f, 0.0f,
+			1.0f, 0.0f,
+			1.0f, 1.0f,
+			0.0f, 1.0f
+		};
+
+		glBufferSubData(GL_ARRAY_BUFFER, 16 * sizeof( GLfloat ), sizeof( text_pos ), text_pos );
+
+
+		static const GLushort vertex_indeces[] = 
+		{
+			0, 1, 2, 0, 2, 3
+		};
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndicesID_ );
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof( GLushort ), &vertex_indeces[0], GL_STATIC_DRAW );
+
+		assert( glGetError()== GL_NO_ERROR );
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0 );
+
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+	}
+
 	glBindVertexArray( 0 );
 
-	assert( glGetError()== GL_NO_ERROR );
-
-	this->initFrequency();
-
-	assert( glGetError()== GL_NO_ERROR );
+//---------------------------------------------------------------------------------
 
 }
 
@@ -68,123 +92,81 @@ FZFont::~FZFont()
 
 void FZFont::renderText(std::wstring& text, glm::vec3 pos, glm::mat4 MVP,  GLfloat scale, glm::vec3 color )
 {
-	glEnable( GL_TEXTURE_2D );
 	glActiveTexture( GL_TEXTURE0 );
+	glBindVertexArray( this->vaoID_ );
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndicesID_ );
+
+	this->shader_.Use();
+	glUniformMatrix4fv( shader_( "MVP" ) , 1, GL_FALSE, glm::value_ptr( MVP )  );
+
+	std::wstring::const_iterator c;
+	for ( c = text.begin(); c != text.end(); c++ ) 
+	{
+		Character ch = characters_[*c];
+		glBindTexture( GL_TEXTURE_2D, ch.TextureID );
+
+		GLfloat xpos = pos.x + ch.Bearing.x * scale / 500.0 ;
+		GLfloat ypos = pos.y - (ch.Size.y - ch.Bearing.y) * scale / 500.0;
+
+		GLfloat w = ch.Size.x * scale / 500.0;
+		GLfloat h = ch.Size.y * scale / 500.0;
+		// Update VBO for each character
+		const GLfloat vertex_pos[] = 
+		{
+			xpos,	  ypos + h, pos.z, 1.0f,
+			xpos + w, ypos + h, pos.z, 1.0f,
+			xpos + w, ypos, 	pos.z, 1.0f,
+			xpos,     ypos,	    pos.z, 1.0f
+		};
+
+		glBindBuffer( GL_ARRAY_BUFFER, vboVerticesID_ );
+		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof( vertex_pos ), vertex_pos );
+		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+
+		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL );
+
+		pos.x += (ch.Advance >> 6) * scale /500.0;
+	}
+	this->shader_.UnUse();
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0 );
+	glBindVertexArray( 0 );
+
+	
+//------------------------------------------------------------------
+
+
+// 	GLuint tex_id =  this->characters_[ 66 ].TextureID;
+// 
+// 	glBindTexture( GL_TEXTURE_2D, tex_id );
+// 
 // 	this->shader_.Use();
 // 	{
-// 		glUniform3fv( shader_("vColor"), 1, glm::value_ptr( color ) );
-// 		glUniformMatrix4fv( shader_( "MVP" ), 1, GL_FALSE, glm::value_ptr( MVP ) );
-// 
-// 		glActiveTexture( GL_TEXTURE0 );
-// 		glBindVertexArray( VAO );
-// 
-// 		std::wstring::const_iterator c;
-// 		for ( c = text.begin(); c != text.end(); c++ ) 
-// 		{
-// 
-// 			if ( !this->checkGlyph( *c ) )
-// 			{
-// 				continue;
-// 			}
-// 			
-// 
-// 			Character ch = characters_[*c];
-// 
-// 			GLfloat xpos = pos.x + ch.Bearing.x * scale;
-// 			GLfloat ypos = pos.y - (ch.Size.y - ch.Bearing.y) * scale;
-// 
-// 			GLfloat w = ch.Size.x * scale;
-// 			GLfloat h = ch.Size.y * scale;
-// 
-// 			// Update VBO for each character
-//  			GLfloat vertices[6][5] = {
-//  				{ xpos,     ypos + h, pos.z,  0.0, 0.0 },            
-//  				{ xpos,     ypos,     pos.z,  0.0, 1.0 },
-//  				{ xpos + w, ypos,     pos.z,  1.0, 1.0 },
-//  
-//  				{ xpos,     ypos + h, pos.z,  0.0, 0.0 },
-//  				{ xpos + w, ypos,     pos.z,  1.0, 1.0 },
-//  				{ xpos + w, ypos + h, pos.z,  1.0, 0.0 }           
-//  			};
-// 			// Render glyph texture over quad
-// 			glBindTexture( GL_TEXTURE_2D, ch.TextureID );
-// 			// Update content of VBO memory
-// 			glBindBuffer( GL_ARRAY_BUFFER, VBO );
-// 
-// 			glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof( vertices ), vertices ); // Be sure to use glBufferSubData and not glBufferData
-// 
-// 			glBindBuffer( GL_ARRAY_BUFFER, 0 );
-// 			// Render quad
-// 			glDrawArrays( GL_TRIANGLES, 0, 6 );
-// 			// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+// 		glUniformMatrix4fv( shader_( "MVP" ) , 1, GL_FALSE, glm::value_ptr( MVP )  );
 // 		
-// 			pos.x += ( ch.Advance >> 6 ) * scale; // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
-// 		}
+// 		const GLfloat vertex_pos[] = 
+// 		{
+// 			0.0f, 0.0f, -2.0f, 1.0f,
+// 			1.0f, 0.0f, -2.0f, 1.0f,
+// 			1.0f, 1.0f, -2.0f, 1.0f,
+// 			0.0f, 1.0f, -2.0f, 1.0f,
+// 		};
+// 
+// 
+// 
+// 		glBindBuffer( GL_ARRAY_BUFFER, vboVerticesID_ );
+// 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof( vertex_pos ), vertex_pos );
+// 		glBindBuffer( GL_ARRAY_BUFFER, 0 );
+// 		
+// 		glBindVertexArray( this->vaoID_ );
+// 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndicesID_ );
+// 		glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, NULL );
+// 
+// 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0 );
 // 		glBindVertexArray( 0 );
-// 		glBindTexture( GL_TEXTURE_2D, 0 );
 // 	}
 // 
 // 	this->shader_.UnUse();
-
-	shader_.Use();
-	{
-		glEnable( GL_TEXTURE_2D );
-		glActiveTexture( GL_TEXTURE0 );
-
-		glUniform3fv( shader_("vColor"), 1, glm::value_ptr( color ) );
-		glUniformMatrix4fv( shader_( "MVP" ), 1, GL_FALSE, glm::value_ptr( MVP ) );
-		glUniform1i( shader_( "text" ), 0 );
-		
-		//glBindVertexArray( VAO );
-
-		glBindTexture( GL_TEXTURE_2D, this->characters_[ 66 ].TextureID );
-		glBegin( GL_QUADS );
-		{
-			glTexCoord2d( 0, 0 );glVertex3f( -0.5f, -0.5f, -1.0 );
-			glTexCoord2d( 0, 1 );glVertex3f(  0.5f, -0.5f, -1.0 );
-			glTexCoord2d( 1, 1 );glVertex3f(  0.5f,  0.5f, -1.0 );
-			glTexCoord2d( 1, 0 );glVertex3f( -0.5f,  0.5f, -1.0 );
-		}
-		glEnd();
-		glBindTexture( GL_TEXTURE_2D, 0  );
-
-// 		GLfloat vertices[6][3] = 
-// 		{
-// 			{ 0.0, 1.0, -1.0 },            
-// 			{ 0.0, 0.0, -1.0 },
-// 			{ 1.0, 0.0, -1.0 },
-// 
-// 			{ 0.0, 1.0, -1.0 },
-// 			{ 1.0, 0.0, -1.0 },
-// 			{ 0.0, 1.0, -1.0 }           
-// 		};
-// 
-// 		GLfloat texcoord[6][2] = 
-// 		{
-// 			{ 0.0, 0.0 },
-// 			{ 0.0, 1.0 },
-// 			{ 1.0, 1.0 },
-// 
-// 			{ 0.0, 0.0 },
-// 			{ 1.0, 1.0 },
-// 			{ 1.0, 0.0 }
-// 		};
-// 
-// 		glBindTexture( GL_TEXTURE_2D, 0 );
-// 		// Update content of VBO memory
-// 		glBindBuffer( GL_ARRAY_BUFFER, VBO );
-// 		
-// 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof( vertices ), vertices );
-// 		glBufferSubData(GL_ARRAY_BUFFER, sizeof( vertices ), sizeof( texcoord ), texcoord );
-// 		
-// 		glBindBuffer( GL_ARRAY_BUFFER, 0 );
-// 		// Render quad
-// 		glBindVertexArray( this->VAO );
-// 		glDrawArrays( GL_TRIANGLES, 0, 6 );
-// 		glBindVertexArray( 0 );
- 	}
-
-	shader_.UnUse();
 
 }
 
@@ -216,6 +198,8 @@ bool FZFont::checkGlyph(unsigned int code )
 		return false;
 	}
 
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
+
 	unsigned int glyth_w = ft_face_->glyph->bitmap.width;
 	unsigned int glyth_h = ft_face_->glyph->bitmap.rows;
 	// Generate texture
@@ -224,7 +208,7 @@ bool FZFont::checkGlyph(unsigned int code )
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RED, glyth_w, glyth_h, 0, GL_RED, GL_UNSIGNED_BYTE, ft_face_->glyph->bitmap.buffer );
 	//glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, glyth_w, glyth_h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, ft_face_->glyph->bitmap.buffer );
-	
+
 	// Set texture options
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -238,6 +222,7 @@ bool FZFont::checkGlyph(unsigned int code )
 		glm::ivec2( ft_face_->glyph->bitmap_left, ft_face_->glyph->bitmap_top ),
 		ft_face_->glyph->advance.x
 	};
+
 	this->characters_.insert( std::pair<unsigned int, Character>( code, character ) );
 
 	glBindTexture(GL_TEXTURE_2D, 0);
