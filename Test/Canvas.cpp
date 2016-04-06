@@ -1,6 +1,7 @@
 ﻿#include "Canvas.h"
 
 #include <iostream>
+#include <stdio.h>
 #include <string>
 
 #include <QtGui/QtEvents>
@@ -10,40 +11,70 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Rectangle.h"
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include <FTGL/ftgl.h>
-
-#include "FZFont.h"
+#include "freetype-gl.h"
+#include "vertex-buffer.h"
 
 #define GL_CHECK_ERRORS assert( glGetError()== GL_NO_ERROR );
 
+GLSLShader shader;
+vertex_buffer* buffer;
+texture_atlas *atlas;
+texture_font* FONT;
 
-//screen resolution
-const int WIDTH  = 1280;
-const int HEIGHT = 960;
+
+glm::mat4 model, view, projection;
+
+typedef struct {
+	float x, y, z;    // position
+	float s, t;       // texture
+	float r, g, b, a; // color
+} vertex_t;
 
 
-FZFont* fzfont;
-
-FTFont* FONT;
-FTSimpleLayout* LAYOUT;
+void add_text( vertex_buffer* buffer, texture_font* font,
+	char * text, glm::vec4 * color, glm::vec2 * pen )
+{
+	size_t i;
+	float r = color->r, g = color->g, b = color->b, a = color->a;
+	for( i = 0; i < strlen(text); ++i )
+	{
+		texture_glyph *glyph = font->getGlyph( text + i );
+		if( glyph != NULL )
+		{
+			float kerning =  0.0f;
+			if( i > 0)
+			{
+				kerning = glyph->getKerning( text + i - 1 );
+			}
+			pen->x += kerning;
+			int x0  = (int)( pen->x + glyph->offset_x );
+			int y0  = (int)( pen->y + glyph->offset_y );
+			int x1  = (int)( x0 + glyph->width );
+			int y1  = (int)( y0 - glyph->height );
+			float s0 = glyph->s0;
+			float t0 = glyph->t0;
+			float s1 = glyph->s1;
+			float t1 = glyph->t1;
+			GLuint indices[6] = {0,1,2, 0,2,3};
+			vertex_t vertices[4] = { 
+			{ x0,y0,0,  s0,t0,  r,g,b,a },
+			{ x0,y1,0,  s0,t1,  r,g,b,a },
+			{ x1,y1,0,  s1,t1,  r,g,b,a },
+			{ x1,y0,0,  s1,t0,  r,g,b,a } };
+			buffer->pushBack( vertices, 4, indices, 6 );
+			pen->x += glyph->advance_x;
+		}
+	}
+}
 
 
 Canvas::Canvas(QWidget *parent)
 	: QOpenGLWidget(parent)
 {
-	this->camera_ = new Camera();
 }
 
 Canvas::~Canvas()
 {
-	glDeleteTextures( 1, &this->g_tex_render_id_ );
-	glDeleteRenderbuffers( 1, &this->g_rbo_id_ );
-	glDeleteFramebuffers( 1, &this->g_fbo_id_ );
-
-	delete this->camera_;
-	this->camera_ = nullptr;
 }
 
 
@@ -78,51 +109,101 @@ void Canvas::initializeGL()
 
 	glClearColor( 0.2f, 0.3f, 0.3f, 1.0f );
 
-	//this->rectangle_ = new CRectangle();
+// 	glEnable(GL_BLEND);
+// 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-//--------------------------------------------
-	fzfont = new FZFont( "C:/Windows/Fonts/msyh.ttf" );
-//--------------------------------------------
+//--------------------------------------------------------
 
-// 	glEnable(GL_CULL_FACE);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	atlas = new texture_atlas( 512, 512, 1 );
+	const char * filename = "C:/Windows/Fonts/msyh.ttf";
+	char * text = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
+	buffer = new vertex_buffer( "vertex:3f,tex_coord:2f,color:4f" );
+	glm::vec2 pen( 5,400 );
+	glm::vec4 black( 0, 0, 0, 1 );
 
+	FONT = new texture_font( atlas, 64, filename );
+	pen.x = 5;
+	pen.y -= FONT->getHeight();
+	FONT->loadGlyphs( text );
+	FONT->loadGlyphs( text );
+	add_text( buffer, FONT, text, &black, &pen );
+	FONT->getAtlas()->upload( );
+	//delete font;
+
+	GL_CHECK_ERRORS
+
+	unsigned int a = atlas->getTexID();
+	glBindTexture( GL_TEXTURE_2D, atlas->getTexID() );
+
+	shader.LoadFromFile( GL_VERTEX_SHADER, "E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/v3f-t2f-c4f.vert" );
+	shader.LoadFromFile( GL_FRAGMENT_SHADER,"E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/v3f-t2f-c4f.frag" );
+	shader.CreateAndLinkProgram();
+
+	GL_CHECK_ERRORS
+
+	projection = glm::mat4( 1.0 );
+	model	   = glm::mat4( 1.0 );
+	view	   = glm::mat4( 1.0 );
+
+	shader.Use();
+	shader.AddUniform( "texture" );
+	shader.AddUniform( "model" );
+	shader.AddUniform( "view" );
+	shader.AddUniform( "projection" );
+	shader.UnUse();
+
+	GL_CHECK_ERRORS
 }
 
 void Canvas::paintGL()
 {
-	glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT );
+	GL_CHECK_ERRORS
 
-	glm::mat4 P = this->camera_->getProjectionMatrix();
-	glm::mat4 V = this->camera_->getViewMatrix();
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	//this->rectangle_->render( glm::value_ptr( P*V ) );
-// 	for ( unsigned int i = 0; i < 100; ++ i ) 
-// 	{
-// 
-// 		float de = i /100;
-// 		fzfont->renderText( std::wstring( L"abcd.?...{}[+-gthzsaehjkrhekrqjekwjkvkewqhrjhlalkdjfhkq" ),glm::vec3( -1.0 , 0.5 -de , -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
-// 
-// 	}
+	glEnable( GL_TEXTURE_2D );
+	glEnable( GL_BLEND );
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+//----------------------------------------------------------
+	glBindTexture( GL_TEXTURE_2D, atlas->getTexID() );
+	glColor3f( 1.0, 1.0, 0.0 );
 
-	fzfont->renderText( std::wstring( L"abcd.?...{}[+-gthz" ),glm::vec3( -1.0, 0.5, -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
-	fzfont->renderText( std::wstring( L"aadfdfdfdf" ),glm::vec3( -1.0, 0.4, -1.0 ), P*V, 1.0, glm::vec3( 1.0, 1.0, 0.0 ) );
+	auto glyph = FONT->getGlyph( "Q" );
+	float s0 = glyph->s0;
+	float t0 = glyph->t0;
+	float s1 = glyph->s1;
+	float t1 = glyph->t1;
 
-//	Character c = fzfont->getCharactor( 71 );
-//
-// 	glEnable( GL_TEXTURE_2D );
-// 	glColor3f( 1.0 , 1.0, 1.0 ); 
-// 	glBindTexture( GL_TEXTURE_2D, c.TextureID );
-// 	glBegin( GL_QUADS );
-// 	{
-// 		glTexCoord2d( 0, 0 );glVertex3f( -0.5f, -0.5f, -1.0 );
-// 		glTexCoord2d( 0, 1 );glVertex3f(  0.5f, -0.5f, -1.0 );
-// 		glTexCoord2d( 1, 1 );glVertex3f(  0.5f,  0.5f, -1.0 );
-// 		glTexCoord2d( 1, 0 );glVertex3f( -0.5f,  0.5f, -1.0 );
-// 	}
-// 	glEnd();
+	glm::vec2 pen( 50.0, 50.0 );
+	int x0  = (int)( pen.x + glyph->offset_x );
+	int y0  = (int)( pen.y + glyph->offset_y );
+	int x1  = (int)( x0 + glyph->width );
+	int y1  = (int)( y0 - glyph->height );
 
+	glBegin( GL_POLYGON );
+	{
+		glTexCoord2f(s0,t0 );glVertex3f( x0, y0, 0 );
+		glTexCoord2f(s0,t1 );glVertex3f( x0, y1, 0 );
+		glTexCoord2f(s1,t1 );glVertex3f( x1, y1, 0 );
+		glTexCoord2f(s1,t0 );glVertex3f( x1, y0, 0 );
+
+	}
+	glEnd();
+	GL_CHECK_ERRORS
+//----------------------------------------------------------
+
+	shader.Use();
+	{
+		glUniform1i( shader( "texture" ), 0 );
+		glUniformMatrix4fv( shader( "model" ), 1, 0, glm::value_ptr( model ) );
+		glUniformMatrix4fv( shader( "view" ),  1, 0, glm::value_ptr( view ) );
+		glUniformMatrix4fv( shader( "projection" ), 1, 0, glm::value_ptr( projection ) ) ;
+		buffer->render(  GL_TRIANGLES );
+	}
+	shader.UnUse();
+	auto e =  glGetError();
+
+	GL_CHECK_ERRORS
 }
 
 void Canvas::resizeGL( int w, int h )
@@ -132,17 +213,18 @@ void Canvas::resizeGL( int w, int h )
 	this->height_ = h;
 
 	glViewport ( 0, 0, ( GLsizei ) w, ( GLsizei ) h );
-	this->camera_->setPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );
-	this->camera_->lookAt( glm::vec3( 0, 0, 0 ), glm::vec3( 0, 0, -100 ), glm::vec3( 0, 1, 0 ) );
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 
-	gluPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );
+	//gluPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );
+
+	glOrtho( 0, w, 0, h, -1, 1 );
 
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 
+	projection = glm::ortho( 0, w, 0, h, -1, 1 );
 }
 
 void Canvas::mouseMoveEvent( QMouseEvent* event )
@@ -157,11 +239,6 @@ void Canvas::mouseMoveEvent( QMouseEvent* event )
 
 	float delta_x = ( p.x() - this->pos0_.x() ) * 0.1;
 	float delta_y = ( p.y() - this->pos0_.y() ) * 0.1;
-
-	//this->camera_->translate( glm::vec3( delta_x, - delta_y, 0.0 ) );
-
-	//this->camera_->rotate( -delta_x, -delta_y, 0 );
-	this->camera_->rotate( delta_x, -delta_y, 0 );
 
 	this->pos0_ = p;
 
@@ -186,10 +263,6 @@ void Canvas::wheelEvent(QWheelEvent * event)
 	int a = event->delta();
 	float b = 1 + a / 1000.0;
 
-	//this->camera_->zoom( b );
-
-	//this->camera_->zoom ( a  /1000.0f);
-	this->camera_->move(0, 0, a/1000.0 );
 
 	this->update();
 
