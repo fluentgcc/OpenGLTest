@@ -1,33 +1,4 @@
 /*
- * Copyright 2009 Stefan Gustavson (stefan.gustavson@gmail.com)
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  1. Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
- *
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY STEFAN GUSTAVSON ''AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL STEFAN GUSTAVSON OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * The views and conclusions contained in the software and documentation are
- * those of the authors and should not be interpreted as representing official
- * policies, either expressed or implied, of Stefan Gustavson.
- *
- *
  * edtaa3()
  *
  * Sweep-and-update Euclidean distance transform of an
@@ -63,7 +34,7 @@
  * The gradient is computed only at edge pixels. At other places in the
  * image, it is never used, and it's mostly zero anyway.
  */
-void computegradient(double *img, int w, int h, double *gx, double *gy)
+void ftgl::computegradient(double *img, int w, int h, double *gx, double *gy)
 {
     int i,j,k;
     double glength;
@@ -97,7 +68,7 @@ void computegradient(double *img, int w, int h, double *gx, double *gy)
  * accuracy at and near edges, and reduces the error even at distant pixels
  * provided that the gradient direction is accurately estimated.
  */
-double edgedf(double gx, double gy, double a)
+double ftgl::edgedf(double gx, double gy, double a)
 {
     double df, glength, temp, a1;
 
@@ -132,7 +103,7 @@ double edgedf(double gx, double gy, double a)
     return df;
 }
 
-double distaa3(double *img, double *gximg, double *gyimg, int w, int c, int xc, int yc, int xi, int yi)
+double ftgl::distaa3(double *img, double *gximg, double *gyimg, int w, int c, int xc, int yc, int xi, int yi)
 {
   double di, df, dx, dy, gx, gy, a;
   int closest;
@@ -162,7 +133,7 @@ double distaa3(double *img, double *gximg, double *gyimg, int w, int c, int xc, 
 // Shorthand macro: add ubiquitous parameters dist, gx, gy, img and w and call distaa3()
 #define DISTAA(c,xc,yc,xi,yi) (distaa3(img, gx, gy, w, c, xc, yc, xi, yi))
 
-void edtaa3(double *img, double *gx, double *gy, int w, int h, short *distx, short *disty, double *dist)
+void ftgl::edtaa3(double *img, double *gx, double *gy, int w, int h, short *distx, short *disty, double *dist)
 {
   int x, y, i, c;
   int offset_u, offset_ur, offset_r, offset_rd,

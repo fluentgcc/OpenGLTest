@@ -151,7 +151,7 @@ const char* ftgl::vertex_buffer::getFormat()
 	return this->format;
 }
 
-void ftgl::vertex_buffer::printInfo()
+void ftgl::vertex_buffer::print()
 {
 	int i = 0;
 	static char *gltypes[9] = {
@@ -221,14 +221,14 @@ void ftgl::vertex_buffer::renderSetup(GLenum mode)
 
 		for( i=0; i<MAX_VERTEX_ATTRIBUTE; ++i )
 		{
-			vertex_attribute_t *attribute = this->attributes[i];
+			vertex_attribute *attribute = this->attributes[i];
 			if( attribute == 0 )
 			{
 				continue;
 			}
 			else
 			{
-				vertex_attribute_enable( attribute );
+				attribute->enable();
 			}
 		}
 
@@ -255,7 +255,7 @@ void ftgl::vertex_buffer::renderSetup(GLenum mode)
 		}
 		else
 		{
-			vertex_attribute_enable( attribute );
+			attribute->enable();
 		}
 	}
 

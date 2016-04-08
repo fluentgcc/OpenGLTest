@@ -15,14 +15,13 @@ ftgl::texture_atlas::texture_atlas(const size_t width, const size_t height, cons
 
 	assert( (depth == 1) || (depth == 3) || (depth == 4) );
 
-	this->nodes = vector_new( sizeof( glm::ivec3 ) );
 	this->used = 0;
 	this->width = width;
 	this->height = height;
 	this->depth = depth;
 	this->id = 0;
 
-	vector_push_back( this->nodes, &node );
+	this->nodes.push_back( node );
 
 	//·ÖÅä¿Õ¼ä;
 	this->data = ( unsigned char * )calloc( width * height * depth, sizeof( unsigned char ) );
@@ -37,7 +36,8 @@ ftgl::texture_atlas::texture_atlas(const size_t width, const size_t height, cons
 
 ftgl::texture_atlas::~texture_atlas()
 {
-	vector_delete( this->nodes );
+	this->nodes.clear();
+
 	if( this->data )
 	{
 		free( this->data );
@@ -102,12 +102,12 @@ glm::ivec4 ftgl::texture_atlas::getRegion(const size_t width, const size_t heigh
 	best_index  = -1;
 	best_width = UINT_MAX;
 
-	for( i = 0; i < this->nodes->size; ++i )
+	for( i = 0; i < this->nodes.size(); ++i )
 	{
 		y = this->fit( i, width, height );
 		if( y >= 0 )
 		{
-			node = ( glm::ivec3 * ) vector_get( this->nodes, i );
+			node = &this->nodes[i];
 			if( ( ( y + height ) < best_height ) ||
 				( ( ( y + height ) == best_height ) && ( node->z > 0 && ( size_t )node->z < best_width ) ) )
 			{
@@ -129,34 +129,26 @@ glm::ivec4 ftgl::texture_atlas::getRegion(const size_t width, const size_t heigh
 		return region;
 	}
 
-	node = new glm::ivec3();
-	if( node == NULL)
-	{
-		fprintf( stderr,
-			"line %d: No more memory for allocating data\n", __LINE__ );
-		exit( EXIT_FAILURE );
-	}
+	node = &glm::ivec3(1);
 
 	node->x = region.x;
 	node->y = region.y + height;
 	node->z = width;
-	vector_insert( this->nodes, best_index, node );
-	
-	delete node ;
+	this->nodes.insert( this->nodes.begin() + best_index , *node );
 
-	for(i = best_index + 1; i < this->nodes->size; ++i)
+	for(i = best_index + 1; i < this->nodes.size(); ++i)
 	{
-		node = ( glm::ivec3 * ) vector_get( this->nodes, i );
-		prev = ( glm::ivec3 * ) vector_get( this->nodes, i-1 );
+		node = &this->nodes[i] ;
+		prev = &this->nodes[i-1];
 
-		if (node->x < (prev->x + prev->z) )
+		if ( node->x < ( prev->x + prev->z ) )
 		{
 			int shrink = prev->x + prev->z - node->x;
 			node->x += shrink;
 			node->z -= shrink;
 			if (node->z <= 0)
 			{
-				vector_erase( this->nodes, i );
+				this->nodes.erase( this->nodes.begin() + i );
 				--i;
 			}
 			else
@@ -204,25 +196,29 @@ void ftgl::texture_atlas::clear()
 
 	assert( this->data );
 
-	vector_clear( this->nodes );
+	this->nodes.clear();
 	this->used = 0;
 	// We want a one pixel border around the whole atlas to avoid any artefact when
 	// sampling texture
 	node.z = this->width-2;
 
-	vector_push_back( this->nodes, &node );
+	this->nodes.push_back( node );
 	memset( this->data, 0, this->width * this->height * this->depth );
 }
 
 int ftgl::texture_atlas::fit(const size_t index, const size_t width, const size_t height)
 {
-	glm::ivec3 *node;
+	glm::ivec3* node;
 	int x, y, width_left;
 	size_t i;
 
-	node = ( glm::ivec3 * ) ( vector_get( this->nodes, index ) );
+
+	assert( index < this->nodes.size() );
+	
+	node = &this->nodes[index];
 	x = node->x;
 	y = node->y;
+
 	width_left = width;
 	i = index;
 
@@ -234,7 +230,7 @@ int ftgl::texture_atlas::fit(const size_t index, const size_t width, const size_
 	y = node->y;
 	while( width_left > 0 )
 	{
-		node = ( glm::ivec3 *) (vector_get( this->nodes, i ));
+		node = &this->nodes[i];
 		if( node->y > y )
 		{
 			y = node->y;
@@ -254,14 +250,14 @@ void ftgl::texture_atlas::merge()
 	glm::ivec3 *node, *next;
 	size_t i;
 
-	for( i=0; i< this->nodes->size-1; ++i )
+	for( i=0; i< this->nodes.size() -1; ++i )
 	{
-		node = ( glm::ivec3 * ) (vector_get( this->nodes, i ) );
-		next = ( glm::ivec3 * ) (vector_get( this->nodes, i+1 ) );
+		node = &this->nodes[i];
+		next = &this->nodes[i+1];
 		if( node->y == next->y )
 		{
 			node->z += next->z;
-			vector_erase( this->nodes, i+1 );
+			this->nodes.erase( this->nodes.begin() + i + 1 );
 			--i;
 		}
 	}

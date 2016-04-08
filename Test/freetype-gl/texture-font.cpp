@@ -26,7 +26,6 @@ const struct {
 } FT_Errors[] =
 #include FT_ERRORS_H
 
-
 //------------------------------------------------------------
 ftgl::texture_glyph::texture_glyph()
 {
@@ -43,12 +42,11 @@ ftgl::texture_glyph::texture_glyph()
 	this->t0        = 0.0;
 	this->s1        = 0.0;
 	this->t1        = 0.0;
-	this->kerning   = vector_new( sizeof( kerning_t ) );
 }
 
 ftgl::texture_glyph::~texture_glyph()
 {
-	vector_delete( this->kerning );
+	this->kerning.clear();
 }
 
 float ftgl::texture_glyph::getKerning(const char * codepoint)
@@ -56,12 +54,12 @@ float ftgl::texture_glyph::getKerning(const char * codepoint)
 	size_t i;
 	uint32_t ucodepoint = utf8_to_utf32( codepoint );
 
-	for( i=0; i < vector_size( this->kerning ); ++i )
+	for( i=0; i < this->kerning.size(); ++i )
 	{
-		kerning_t * kerning = (kerning_t *) vector_get( this->kerning, i );
-		if( kerning->codepoint == ucodepoint )
+		kerning_t kerning_c = this->kerning[i];
+		if( kerning_c.codepoint == ucodepoint )
 		{
-			return kerning->kerning;
+			return kerning_c.kerning;
 		}
 	}
 	return 0;
@@ -70,19 +68,20 @@ float ftgl::texture_glyph::getKerning(const char * codepoint)
 
 ftgl::texture_font::texture_font(texture_atlas* atlas, const float pt_size, const char * filename)
 {
-
 	assert(filename);
 
 	this->atlas = atlas;
 	this->size  = pt_size;
 
 	this->location = TEXTURE_FONT_FILE;
-	this->filename = strdup(filename);
+	this->filename = strdup( filename );
 
-	if ( this->init() ) 
+	if ( 0 != this->init() ) 
 	{
+		fprintf( stderr, "text_font_init_error"  );
 		return;
 	}
+	
 }
 
 ftgl::texture_font::texture_font(texture_atlas* atlas, float pt_size, const void *memory_base, size_t memory_size)
@@ -97,10 +96,13 @@ ftgl::texture_font::texture_font(texture_atlas* atlas, float pt_size, const void
 	this->memory.base = memory_base;
 	this->memory.size = memory_size;
 
-	if ( this->init() ) 
+	if ( 0 != this->init() ) 
 	{
+		fprintf( stderr, "text_font_init_error" );
 		return;
 	}
+	
+
 }
 
 ftgl::texture_font::~texture_font()
@@ -111,13 +113,13 @@ ftgl::texture_font::~texture_font()
 	if( this->location == TEXTURE_FONT_FILE && this->filename)
 		free( this->filename );
 
-	for( i = 0; i < vector_size( this->glyphs ); ++i )
+	for( i = 0; i < this->glyphs.size(); ++i )
 	{
-		glyph = *(texture_glyph **) vector_get( this->glyphs, i );
+		glyph = this->glyphs[i];
 		delete glyph;
 	}
 
-	vector_delete( this->glyphs );
+	this->glyphs.clear();
 }
 
 
@@ -159,8 +161,9 @@ ftgl::texture_glyph* ftgl::texture_font::getGlyph(const char* codepoint)
         glyph->t0 = (region.y+2)/(float)height;
         glyph->s1 = (region.x+3)/(float)width;
         glyph->t1 = (region.y+3)/(float)height;
-        vector_push_back( this->glyphs, &glyph );
-        return glyph; //*(texture_glyph_t **) vector_back( this->glyphs );
+
+        this->glyphs.push_back( glyph );
+        return glyph;
     }
 
     /* Glyph has not been already loaded */
@@ -385,7 +388,7 @@ size_t ftgl::texture_font::loadGlyphs( const char* codepoints )
 		glyph->advance_x = slot->advance.x / HRESf;
 		glyph->advance_y = slot->advance.y / HRESf;
 
-		vector_push_back( this->glyphs, &glyph );
+		this->glyphs.push_back( glyph );
 
 		if( this->outline_type > 0 )
 		{
@@ -484,15 +487,15 @@ void ftgl::texture_font::generateKerning()
 	
 	/* For each glyph couple combination, check if kerning is necessary */
 	/* Starts at index 1 since 0 is for the special backgroudn glyph */
-	for( i = 1; i < this->glyphs->size; ++i )
+	for( i = 1; i < this->glyphs.size(); ++i )
 	{
-		glyph = *( texture_glyph ** ) vector_get( this->glyphs, i );
+		glyph = this->glyphs[i];
 		glyph_index = FT_Get_Char_Index( face, glyph->codepoint );
-		vector_clear( glyph->kerning );
+		glyph->kerning.clear();
 
-		for( j=1; j < this->glyphs->size; ++j )
+		for( j=1; j < this->glyphs.size(); ++j )
 		{
-			prev_glyph = *( texture_glyph **) vector_get( this->glyphs, j );
+			prev_glyph = this->glyphs[j];
 			prev_index = FT_Get_Char_Index( face, prev_glyph->codepoint );
 			FT_Get_Kerning( face, prev_index, glyph_index, FT_KERNING_UNFITTED, &kerning );
 			// printf("%c(%d)-%c(%d): %ld\n",
@@ -501,7 +504,7 @@ void ftgl::texture_font::generateKerning()
 			if( kerning.x )
 			{
 				kerning_t k = {prev_glyph->codepoint, kerning.x / (float)( HRESf*HRESf ) };
-				vector_push_back( glyph->kerning, &k );
+				glyph->kerning.push_back( k );
 			}
 		}
 	}
@@ -522,7 +525,6 @@ int ftgl::texture_font::init()
 		|| (this->location == TEXTURE_FONT_MEMORY
 		&& this->memory.base && this->memory.size));
 
-	this->glyphs = vector_new( sizeof( texture_glyph * ) );
 	this->height = 0;
 	this->ascender = 0;
 	this->descender = 0;
@@ -577,9 +579,9 @@ ftgl::texture_glyph* ftgl::texture_font::findGlyph( const char* codepoint)
 	texture_glyph *glyph;
 	uint32_t ucodepoint = utf8_to_utf32( codepoint );
 
-	for( i = 0; i < this->glyphs->size; ++i )
+	for( i = 0; i < this->glyphs.size(); ++i )
 	{
-		glyph = *(texture_glyph **) vector_get( this->glyphs, i );
+		glyph = this->glyphs[i];
 
 		// If codepoint is -1, we don't care about outline type or thickness
 		if( ( glyph->codepoint == ucodepoint ) &&

@@ -5,6 +5,7 @@
 #include <string>
 
 #include <QtGui/QtEvents>
+#include <QtCore/QString>
 #include <SOIL.h>
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -13,6 +14,7 @@
 
 #include "freetype-gl.h"
 #include "vertex-buffer.h"
+#include "distance-field.h"
 
 #define GL_CHECK_ERRORS assert( glGetError()== GL_NO_ERROR );
 
@@ -71,6 +73,7 @@ void add_text( vertex_buffer* buffer, texture_font* font,
 Canvas::Canvas(QWidget *parent)
 	: QOpenGLWidget(parent)
 {
+
 }
 
 Canvas::~Canvas()
@@ -116,19 +119,27 @@ void Canvas::initializeGL()
 
 	atlas = new texture_atlas( 512, 512, 1 );
 	const char * filename = "C:/Windows/Fonts/msyh.ttf";
-	char * text = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
+	char * text = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~		";
+	
 	buffer = new vertex_buffer( "vertex:3f,tex_coord:2f,color:4f" );
 	glm::vec2 pen( 5,400 );
 	glm::vec4 black( 0, 0, 0, 1 );
 
-	FONT = new texture_font( atlas, 64, filename );
+	FONT = new texture_font( atlas, 32, filename );
 	pen.x = 5;
 	pen.y -= FONT->getHeight();
 	FONT->loadGlyphs( text );
-	FONT->loadGlyphs( text );
 	add_text( buffer, FONT, text, &black, &pen );
-	FONT->getAtlas()->upload( );
+	
 	//delete font;
+
+	unsigned char* map;
+
+	map = ftgl::make_distance_mapb( atlas->getData(), atlas->getWidth(), atlas->getHeight()  );
+
+	memcpy( atlas->getData(), map, atlas->getWidth()*atlas->getHeight()*sizeof( unsigned char ) );
+	free(map);
+	FONT->getAtlas()->upload();
 
 	GL_CHECK_ERRORS
 
@@ -153,6 +164,17 @@ void Canvas::initializeGL()
 	shader.UnUse();
 
 	GL_CHECK_ERRORS
+
+
+		//	char* text = "王王";
+		// 	std::vector< char > vec;
+		// 	vec.push_back( text[0] );
+		// 	vec.push_back( text[1] );
+		// 	vec.push_back( text[2] );
+		// 	vec.push_back( text[3] );
+		// 	vec.push_back( text[4] );
+		// 	vec.push_back( text[5] );
+		// 	vec.push_back( text[6] );
 }
 
 void Canvas::paintGL()
@@ -168,15 +190,62 @@ void Canvas::paintGL()
 	glBindTexture( GL_TEXTURE_2D, atlas->getTexID() );
 	glColor3f( 1.0, 1.0, 0.0 );
 
+// 	std::string s( "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijkl" ); 
+// 
+// 	glm::vec2 pen( 1, 50 );
+// 
+// 	for ( int i = 0; i < 100; ++i )
+// 	{
+// 		for ( auto it = s.begin(); it != s.end(); ++it )
+// 		{
+// 			char cha = *it;
+// 
+// 			auto glyph = FONT->getGlyph( &cha );
+// 
+// 			float kerning =  0.0f;
+// 			if( it !=  s.begin() )
+// 			{
+// 				kerning = glyph->getKerning( &cha );
+// 			}
+// 			pen.x += kerning;
+// 
+// 
+// 			float s0 = glyph->s0;
+// 			float t0 = glyph->t0;
+// 			float s1 = glyph->s1;
+// 			float t1 = glyph->t1;
+// 
+// 			int x0  = (int)( pen.x + glyph->offset_x );
+// 			int y0  = (int)( pen.y + glyph->offset_y );
+// 			int x1  = (int)( x0 + glyph->width );
+// 			int y1  = (int)( y0 - glyph->height );
+// 
+// 			glBegin( GL_POLYGON );
+// 			{
+// 				glTexCoord2f(s0,t0 );glVertex3f( x0, y0, 0 );
+// 				glTexCoord2f(s0,t1 );glVertex3f( x0, y1, 0 );
+// 				glTexCoord2f(s1,t1 );glVertex3f( x1, y1, 0 );
+// 				glTexCoord2f(s1,t0 );glVertex3f( x1, y0, 0 );
+// 
+// 			}
+// 
+// 			pen.x += glyph->advance_x;
+// 			glEnd();
+// 		}
+// 
+// 		pen.y += 10;
+// 		pen.x = 1;
+// 	}
+
 	auto glyph = FONT->getGlyph( "Q" );
 	float s0 = glyph->s0;
 	float t0 = glyph->t0;
 	float s1 = glyph->s1;
 	float t1 = glyph->t1;
 
-	glm::vec2 pen( 50.0, 50.0 );
-	int x0  = (int)( pen.x + glyph->offset_x );
-	int y0  = (int)( pen.y + glyph->offset_y );
+	glm::vec2 pen2( 50.0, 50.0 );
+	int x0  = (int)( pen2.x + glyph->offset_x );
+	int y0  = (int)( pen2.y + glyph->offset_y );
 	int x1  = (int)( x0 + glyph->width );
 	int y1  = (int)( y0 - glyph->height );
 
@@ -192,6 +261,8 @@ void Canvas::paintGL()
 	GL_CHECK_ERRORS
 //----------------------------------------------------------
 
+	glActiveTexture( GL_TEXTURE0 );
+	glBindTexture( GL_TEXTURE_2D, atlas->getTexID() );
 	shader.Use();
 	{
 		glUniform1i( shader( "texture" ), 0 );

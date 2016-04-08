@@ -2,11 +2,6 @@
 #define __VERTEX_ATTRIBUTE_H__
 
 #include "opengl.h"
-#include "vector_t.h"
-
-namespace ftgl 
-{
-
 /**
  * Besides the required vertex position, vertices can have several other
  * numeric attributes. Each is specified in the format string with a letter,
@@ -144,9 +139,10 @@ namespace ftgl
  * @{
  */
 
+namespace ftgl 
+{
 
 #define MAX_VERTEX_ATTRIBUTE 16
-
 
 
 class  vertex_attribute
@@ -157,19 +153,21 @@ public:
 
 	~vertex_attribute();
 
+	void enable();
+
 public:
-    GLchar * name;
-    GLuint index;
-    GLint size;
-    GLenum type;
-    GLboolean normalized;
-    GLsizei stride;
-    GLvoid * pointer;
-    void ( * enable )(void *);
+	GLchar*   name;
+	GLuint    index;
+	GLint     size;				//1, 2, 3 or 4;  default:4; 
+	GLenum    type;				//类型: GL_BYTE, GL_UNSIGNED_BYTE, GL_SHORT,;
+								//  GL_UNSIGNED_SHORT, GL_INT, GL_UNSIGNED_INT, GL_FLOAT, or GL_DOUBLE; 默认float;
+
+	GLboolean normalized;		//是否进行归一化;
+	GLsizei   stride;			//连续vertex attr 之间的byte offset;0的话是紧密排列;
+	GLvoid*   pointer;			//指向序列中第一个attribute元素的地址;
 };
 
 vertex_attribute* vertex_attribute_parse( char* format );
-void vertex_attribute_enable( vertex_attribute *attr );
 }
 
 

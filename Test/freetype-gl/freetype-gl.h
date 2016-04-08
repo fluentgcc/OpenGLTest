@@ -3,7 +3,6 @@
 
 /* Mandatory */
 #include "opengl.h"
-#include "vector_t.h"
 #include "texture-atlas.h"
 #include "texture-font.h"
 

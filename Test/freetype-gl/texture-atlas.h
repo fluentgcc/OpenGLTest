@@ -6,7 +6,7 @@
 
 #include <stdlib.h>
 
-#include "vector_t.h"
+#include <vector>
 
 
 
@@ -98,6 +98,7 @@ namespace ftgl
 		inline size_t getHeight(){ return this->height; }
 		inline size_t getDepth() { return this->depth; }
 		inline unsigned int getTexID(){ return this->id; }
+		unsigned char* getData(){ return this->data; }
 
 	private:
 		int fit( const size_t index, const size_t width, const size_t height );
@@ -105,7 +106,8 @@ namespace ftgl
 
 	private:
 
-		vector_t * nodes;			//Allocated nodes
+		//注意，修改数据时需用引用; glm::ivec3* v = &modes[i];
+		std::vector<glm::ivec3>  nodes;			//Allocated nodes
 
 		size_t width;				//Width (in pixels) of the underlying texture
 

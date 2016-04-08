@@ -1,51 +1,15 @@
-/* ============================================================================
- * Freetype GL - A C OpenGL Freetype engine
- * Platform:    Any
- * WWW:         https://github.com/rougier/freetype-gl
- * ----------------------------------------------------------------------------
- * Copyright 2011,2012 Nicolas P. Rougier. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  1. Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
- *
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY NICOLAS P. ROUGIER ''AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL NICOLAS P. ROUGIER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * The views and conclusions contained in the software and documentation are
- * those of the authors and should not be interpreted as representing official
- * policies, either expressed or implied, of Nicolas P. Rougier.
- * ============================================================================
- */
 #ifndef __TEXT_BUFFER_H__
 #define __TEXT_BUFFER_H__
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include "vertex-buffer.h"
 #include "font-manager.h"
 #include "markup.h"
-#include "shader.h"
+#include "GLSLShader.h"
 
-#ifdef __cplusplus
+#include <glm/glm.hpp>
+
+
 namespace ftgl {
-#endif
 
 /**
  * Use LCD filtering
@@ -57,329 +21,159 @@ namespace ftgl {
  */
 #define LCD_FILTERING_OFF 1
 
-/**
- * @file   text-buffer.h
- * @author Nicolas Rougier (Nicolas.Rougier@inria.fr)
- *
- * @defgroup text-buffer Text buffer
- *
- *
- * <b>Example Usage</b>:
- * @code
- * #include "shader.h"
- *
- * int main( int arrgc, char *argv[] )
- * {
- *
- *     return 0;
- * }
- * @endcode
- *
- * @{
- */
-
-/**
- * Text buffer structure
- */
-typedef struct  text_buffer_t {
-    /**
-     * Vertex buffer
-     */
-    vertex_buffer_t *buffer;
-
-    /**
-     * Font manager
-     */
-    font_manager_t *manager;
-
-    /**
-     * Base color for text
-     */
-    vec4 base_color;
-
-
-    /**
-     * Pen origin
-     */
-    vec2 origin;
-
-    /**
-     * Last pen y location
-     */
-    float last_pen_y;
-
-    /**
-     * Total bounds
-     */
-    vec4 bounds;
-
-    /**
-     * Index (in the vertex buffer) of the current line start
-     */
-    size_t line_start;
-
-    /**
-     * Location of the start of the line
-     */
-    float line_left;
-
-    /**
-     * Vector of line information
-     */
-    vector_t * lines;
-
-    /**
-     * Current line ascender
-     */
-    float line_ascender;
-
-    /**
-     * Current line decender
-     */
-    float line_descender;
-
-    /**
-     * Shader handler
-     */
-    GLuint shader;
-
-    /**
-     * Shader "texture" location
-     */
-    GLuint shader_texture;
-
-    /**
-     * Shader "pixel" location
-     */
-    GLuint shader_pixel;
-
-} text_buffer_t;
-
-
-
-/**
- * Glyph vertex structure
- */
-typedef struct glyph_vertex_t {
-    /**
-     * Vertex x coordinates
-     */
-    float x;
-
-    /**
-     * Vertex y coordinates
-     */
-    float y;
-
-    /**
-     * Vertex z coordinates
-     */
-    float z;
-
-    /**
-     * Texture first coordinate
-     */
-    float u;
-
-    /**
-     * Texture second coordinate
-     */
-    float v;
-
-    /**
-     * Color red component
-     */
-    float r;
-
-    /**
-     * Color green component
-     */
-    float g;
-
-    /**
-     * Color blue component
-     */
-    float b;
-
-    /**
-     * Color alpha component
-     */
-    float a;
-
-    /**
-     * Shift along x
-     */
-    float shift;
-
-    /**
-     * Color gamma correction
-     */
-    float gamma;
-
-} glyph_vertex_t;
-
-
-/**
- * Line structure
- */
-typedef struct line_info_t {
-    /**
-     * Index (in the vertex buffer) where this line starts
-     */
-    size_t line_start;
-
-    /**
-     * bounds of this line
-     */
-    vec4 bounds;
-
-} line_info_t;
 
 /**
  * Align enumeration
  */
 typedef enum Align
 {
-    /**
-     * Align text to the left hand side
-     */
+    //Align text to the left hand side
     ALIGN_LEFT,
 
-    /**
-     * Align text to the center
-     */
+    //Align text to the center
     ALIGN_CENTER,
 
-    /**
-     * Align text to the right hand side
-     */
+	//Align text to the right hand side
     ALIGN_RIGHT
 } Align;
 
+class text_buffer
+{
+
+public:
+	
+	/*
+	* @param depth          Underlying atlas bit depth (1 or 3)
+	* @param vert_filename  Path to vertex shader
+	* @param frag_filename  Path to fragment shader
+	*/
+	text_buffer( size_t depth, 
+				 const char * vert_filename,
+				 const char * frag_filename);
+
+	/*
+	* @param depth          Underlying atlas bit depth (1 or 3)
+	* @param program        Shader program
+	*/
+	text_buffer( size_t depth,
+				 GLuint program );
+
+	~text_buffer();
+
+	void render();
+
+	/*Print some text to the text buffer
+	@param pen  position of text start
+	@param ...  a series of markup_t *, char * ended by NULL
+	*/
+	void print( glm::vec2 * pen, ... );
+
+	/**
+	* Add some text to the text buffer
+	*
+	* @param self   a text buffer
+	* @param pen    position of text start
+	* @param markup Markup to be used to add text
+	* @param text   Text to be added
+	* @param length Length of text to be added
+	*/
+	void add_text( glm::vec2 * pen, markup_t * markup, const char * text, size_t length  );
+
+
+	/**
+	* Add a char to the text buffer
+	* @param pen      position of text start
+	* @param markup   markup to be used to add text
+	* @param current  charactr to be added
+	* @param previous previous character (if any)
+	*/
+	void add_char( glm::vec2 * pen, markup_t * markup, const char * current, const char * previous );
+
+	/**
+	* Align all the lines of text already added to the buffer
+	* This alignment will be relative to the overall bounds of the
+	* text which can be queried by text_buffer_get_bounds
+	*
+	* @param pen       pen used in last call (must be unmodified)
+	* @param alignment desired alignment of text
+	*/
+	void align( glm::vec2 * pen, Align alignment );
+
+	/*
+	Get the rectangle surrounding the text
+	* @param pen       pen used in last call (must be unmodified)
+	*/
+	glm::vec4 get_bounds( glm::vec2* pen );
+
+	//Clear text buffer;
+	void clear();
+
+
+private:
+	vertex_buffer *buffer;
+
+	font_manager  *manager;
+
+	glm::vec4	  base_color;
+
+	glm::vec2	origin;
+	float		last_pen_y;
+	glm::vec4	bounds;
+
+	size_t		line_start;
+	float		line_left;
+	vector_t*	lines;
+
+	float line_ascender;
+	float line_decender;
+
+	GLSLShader shader;
+
+	GLuint shader_texture;
+	GLuint shader_pixel;
+};
+
+
 
 /**
- * Creates a new empty text buffer using custom shaders.
- *
- * @param depth          Underlying atlas bit depth (1 or 3)
- * @param vert_filename  Path to vertex shader
- * @param frag_filename  Path to fragment shader
- *
- * @return  a new empty text buffer.
- *
+ * Glyph vertex structure
  */
-  text_buffer_t *
-  text_buffer_new( size_t depth,
-                   const char * vert_filename,
-                   const char * frag_filename );
+typedef struct glyph_vertex 
+{
+    float x;		//Vertex x coordinates
+    float y;		//Vertex y coordinates
+    float z;		//Vertex z coordinates
+
+    float u;		//Texture first coordinate
+    float v;		//Texture second coordinate
+
+    float r;		//Color red component
+    float g;		//Color green component
+    float b;		//Color blue component
+    float a;		//Color alpha component
+
+// 	glm::vec3 xyz;	//Vertex x y z coordinates
+// 	glm::vec2 uv;
+// 	glm::vec4 rgba;
+
+    float shift;	//Shift along x
+
+    float gamma;	//Color gamma correction
+}glyph_vertex;
+
 
 /**
- * Creates a new empty text buffer using custom shaders.
- *
- * @param depth          Underlying atlas bit depth (1 or 3)
- * @param program        Shader program
- *
- * @return  a new empty text buffer.
- *
+ * Line structure
  */
-  text_buffer_t *
-  text_buffer_new_with_program( size_t depth,
-                                GLuint program );
 
-/**
- * Deletes texture buffer and its associated shader and vertex buffer.
- *
- * @param  self  texture buffer to delete
- *
- */
-  void
-  text_buffer_delete( text_buffer_t * self );
+typedef struct line_info 
+{
+    size_t line_start;		//Index (in the vertex buffer) where this line starts
+    vec4 bounds;			//bounds of this line
 
-/**
- * Render a text buffer.
- *
- * @param self a text buffer
- *
- */
-  void
-  text_buffer_render( text_buffer_t * self );
+}line_info;
 
-
- /**
-  * Print some text to the text buffer
-  *
-  * @param self a text buffer
-  * @param pen  position of text start
-  * @param ...  a series of markup_t *, char * ended by NULL
-  *
-  */
-  void
-  text_buffer_printf( text_buffer_t * self, vec2 * pen, ... );
-
-
- /**
-  * Add some text to the text buffer
-  *
-  * @param self   a text buffer
-  * @param pen    position of text start
-  * @param markup Markup to be used to add text
-  * @param text   Text to be added
-  * @param length Length of text to be added
-  */
-  void
-  text_buffer_add_text( text_buffer_t * self,
-                        vec2 * pen, markup_t * markup,
-                        const char * text, size_t length );
-
- /**
-  * Add a char to the text buffer
-  *
-  * @param self     a text buffer
-  * @param pen      position of text start
-  * @param markup   markup to be used to add text
-  * @param current  charactr to be added
-  * @param previous previous character (if any)
-  */
-  void
-  text_buffer_add_char( text_buffer_t * self,
-                        vec2 * pen, markup_t * markup,
-                        const char * current, const char * previous );
-
- /**
-  * Align all the lines of text already added to the buffer
-  * This alignment will be relative to the overall bounds of the
-  * text which can be queried by text_buffer_get_bounds
-  *
-  * @param self      a text buffer
-  * @param pen       pen used in last call (must be unmodified)
-  * @param alignment desired alignment of text
-  */
-  void
-  text_buffer_align( text_buffer_t * self, vec2 * pen,
-                     enum Align alignment );
-
- /**
-  * Get the rectangle surrounding the text
-  *
-  * @param self      a text buffer
-  * @param pen       pen used in last call (must be unmodified)
-  */
-  vec4
-  text_buffer_get_bounds( text_buffer_t * self, vec2 * pen );
-
-/**
-  * Clear text buffer
-  *
-  * @param self a text buffer
- */
-  void
-  text_buffer_clear( text_buffer_t * self );
-
-
-/** @} */
-
-#ifdef __cplusplus
 }
-}
-#endif
+
 
 #endif /* #define __TEXT_BUFFER_H__ */

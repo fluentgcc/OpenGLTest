@@ -65,28 +65,6 @@ ftgl::vertex_attribute* ftgl::vertex_attribute_parse(char* format)
 	return attr;
 }
 
-
-void ftgl::vertex_attribute_enable(vertex_attribute *attr)
-{
-	if( attr->index == -1 )
-	{
-		GLint program;
-		glGetIntegerv( GL_CURRENT_PROGRAM, &program );
-		if( program == 0)
-		{
-			return;
-		}
-		attr->index = glGetAttribLocation( program, attr->name );
-		if( attr->index == -1 )
-		{
-			return;
-		}
-	}
-	glEnableVertexAttribArray( attr->index );
-	glVertexAttribPointer( attr->index, attr->size, attr->type,
-		attr->normalized, attr->stride, attr->pointer );
-}
-
 ftgl::vertex_attribute::vertex_attribute(GLchar * name, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLvoid *pointer)
 {
 	this->name       = (GLchar *) strdup( name );
@@ -101,4 +79,25 @@ ftgl::vertex_attribute::vertex_attribute(GLchar * name, GLint size, GLenum type,
 ftgl::vertex_attribute::~vertex_attribute()
 {
 	free( this->name );
+}
+
+void ftgl::vertex_attribute::enable()
+{
+	if( this->index == -1 )
+	{
+		GLint program;
+		glGetIntegerv( GL_CURRENT_PROGRAM, &program );
+		if( program == 0)
+		{
+			return;
+		}
+		this->index = glGetAttribLocation( program, this->name );
+		if( this->index == -1 )
+		{
+			return;
+		}
+	}
+	glEnableVertexAttribArray( this->index );
+	glVertexAttribPointer( this->index, this->size, this->type,
+		this->normalized, this->stride, this->pointer );
 }

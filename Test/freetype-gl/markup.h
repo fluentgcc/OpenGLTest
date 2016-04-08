@@ -1,55 +1,12 @@
-/* =========================================================================
- * Freetype GL - A C OpenGL Freetype engine
- * Platform:    Any
- * WWW:         https://github.com/rougier/freetype-gl
- * -------------------------------------------------------------------------
- * Copyright 2011,2012 Nicolas P. Rougier. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- *  1. Redistributions of source code must retain the above copyright notice,
- *     this list of conditions and the following disclaimer.
- *
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY NICOLAS P. ROUGIER ''AS IS'' AND ANY EXPRESS OR
- * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
- * EVENT SHALL NICOLAS P. ROUGIER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
- * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * The views and conclusions contained in the software and documentation are
- * those of the authors and should not be interpreted as representing official
- * policies, either expressed or implied, of Nicolas P. Rougier.
- * ========================================================================= */
 #ifndef __MARKUP_H__
 #define __MARKUP_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "texture-font.h"
-#include "vec234.h"
+#include <glm/glm.hpp>
 
-#ifdef __cplusplus
 namespace ftgl {
-#endif
 
 /**
- * @file   markup.h
- * @author Nicolas Rougier (Nicolas.Rougier@inria.fr)
- *
- * @defgroup markup Markup
- *
  * Simple structure that describes text properties.
  *
  * <b>Example Usage</b>:
@@ -88,7 +45,7 @@ namespace ftgl {
 /**
  * Simple structure that describes text properties.
  */
-typedef struct markup_t
+typedef struct markup
 {
     /**
      * A font family name such as "normal", "sans", "serif" or "monospace".
@@ -128,12 +85,12 @@ typedef struct markup_t
     /**
      * Text color.
      */
-    vec4 foreground_color;
+    glm::vec4 foreground_color;
 
     /**
      * Background color.
      */
-    vec4 background_color;
+    glm::vec4 background_color;
 
     /**
      * Whether outline is active.
@@ -143,7 +100,7 @@ typedef struct markup_t
     /**
      * Outline color.
      */
-    vec4 outline_color;
+    glm::vec4 outline_color;
 
     /**
      * Whether underline is active.
@@ -153,7 +110,7 @@ typedef struct markup_t
     /**
      * Underline color.
      */
-    vec4 underline_color;
+    glm::vec4 underline_color;
 
     /**
      * Whether overline is active.
@@ -163,7 +120,7 @@ typedef struct markup_t
     /**
      * Overline color.
      */
-    vec4 overline_color;
+    glm::vec4 overline_color;
 
     /**
      * Whether strikethrough is active.
@@ -173,26 +130,20 @@ typedef struct markup_t
     /**
      * Strikethrough color.
      */
-    vec4 strikethrough_color;
+    glm::vec4 strikethrough_color;
 
     /**
      * Pointer on the corresponding font (family/size/bold/italic)
      */
-    texture_font_t * font;
+    texture_font * font;
 
-} markup_t;
+} markup;
 
 /**
   * Default markup
   */
-extern markup_t default_markup;
+extern markup default_markup;
 
-
-/** @} */
-
-#ifdef __cplusplus
 }
-}
-#endif
 
 #endif /* __MARKUP_H__ */

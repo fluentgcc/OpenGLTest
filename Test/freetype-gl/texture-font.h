@@ -3,8 +3,8 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <vector>
 
-#include "vector_t.h"
 #include "texture-atlas.h"
 
 #include <ft2build.h>
@@ -116,7 +116,7 @@ namespace ftgl
 		float s1;								//First normalized texture coordinate (x) of bottom-right corner
 		float t1;								//Second normalized texture coordinate (y) of bottom-right corner
 
-		vector_t * kerning;						//A vector of kerning pairs relative to this glyph.
+		std::vector< kerning_t > kerning;		//A vector of kerning pairs relative to this glyph.
 
 		int outline_type;						// Glyph outline type (0 = None, 1 = line, 2 = inner, 3 = outer)
 
@@ -138,6 +138,7 @@ namespace ftgl
 		~texture_font();
 
 		texture_glyph* getGlyph( const char* codepoint );
+		//texture_glyph* getGlyph( const wchar_t* codepoint);
 
 		/*
 		Request the loading of several glyphs at once.
@@ -153,6 +154,7 @@ namespace ftgl
 
 		inline float getHeight() { return this->height; }
 		inline texture_atlas* getAtlas(){ return this->atlas; }
+		inline const char* getFileName(){ return this->filename; }
 
 
 	private:
@@ -167,7 +169,7 @@ namespace ftgl
 		/**
 		* Vector of glyphs contained in this font.
 		*/
-		vector_t * glyphs;
+		std::vector< texture_glyph* > glyphs;
 
 		/**
 		* Atlas structure to store glyphs data.
