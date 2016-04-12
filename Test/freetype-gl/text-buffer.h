@@ -51,12 +51,11 @@ public:
 				 const char * vert_filename,
 				 const char * frag_filename);
 
-	/*
-	* @param depth          Underlying atlas bit depth (1 or 3)
-	* @param program        Shader program
-	*/
-	text_buffer( size_t depth,
-				 GLuint program );
+// 	/*
+// 	* @param depth          Underlying atlas bit depth (1 or 3)
+// 	* @param program        Shader program
+// 	*/
+// 	text_buffer( size_t depth, GLuint program );
 
 	~text_buffer();
 
@@ -108,6 +107,18 @@ public:
 	//Clear text buffer;
 	void clear();
 
+private:
+	void move_last_line( float dy );
+
+	// finish_line (internal use only)
+	//
+	//  Performs calculations needed at the end of each line of text 
+	//  and prepares for the next line if necessary
+	//
+	//  advancePen: if true, advance the pen to the next line
+	//
+	void finish_line( vec2* pen, bool advancePen );
+
 
 private:
 	vertex_buffer *buffer;
@@ -132,8 +143,6 @@ private:
 	GLuint shader_texture;
 	GLuint shader_pixel;
 };
-
-
 
 /**
  * Glyph vertex structure
@@ -166,12 +175,12 @@ typedef struct glyph_vertex
  * Line structure
  */
 
-typedef struct line_info 
+typedef struct line_info_t 
 {
     size_t line_start;		//Index (in the vertex buffer) where this line starts
     vec4 bounds;			//bounds of this line
 
-}line_info;
+}line_info_t;
 
 }
 

@@ -45,7 +45,7 @@ namespace ftgl {
 /**
  * Simple structure that describes text properties.
  */
-typedef struct markup
+typedef struct markup_t
 {
     /**
      * A font family name such as "normal", "sans", "serif" or "monospace".
@@ -137,12 +137,12 @@ typedef struct markup
      */
     texture_font * font;
 
-} markup;
+} markup_t;
 
 /**
   * Default markup
   */
-extern markup default_markup;
+extern markup_t default_markup;
 
 }
 

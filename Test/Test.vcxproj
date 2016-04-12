@@ -93,7 +93,7 @@
     <ClCompile Include="freetype-gl\texture-atlas.cpp" />
     <ClCompile Include="freetype-gl\texture-font.cpp" />
     <ClCompile Include="freetype-gl\utf8-utils.cpp" />
-    <ClCompile Include="freetype-gl\vector_t.c" />
+    <ClCompile Include="freetype-gl\vector_t.cpp" />
     <ClCompile Include="freetype-gl\vertex-attribute.cpp" />
     <ClCompile Include="freetype-gl\vertex-buffer.cpp" />
     <ClCompile Include="freetype-gl\zy_font_manager.cpp" />

@@ -190,52 +190,52 @@ void Canvas::paintGL()
 	glBindTexture( GL_TEXTURE_2D, atlas->getTexID() );
 	glColor3f( 1.0, 1.0, 0.0 );
 
-// 	std::string s( "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijkl" ); 
-// 
-// 	glm::vec2 pen( 1, 50 );
-// 
-// 	for ( int i = 0; i < 100; ++i )
-// 	{
-// 		for ( auto it = s.begin(); it != s.end(); ++it )
-// 		{
-// 			char cha = *it;
-// 
-// 			auto glyph = FONT->getGlyph( &cha );
-// 
-// 			float kerning =  0.0f;
-// 			if( it !=  s.begin() )
-// 			{
-// 				kerning = glyph->getKerning( &cha );
-// 			}
-// 			pen.x += kerning;
-// 
-// 
-// 			float s0 = glyph->s0;
-// 			float t0 = glyph->t0;
-// 			float s1 = glyph->s1;
-// 			float t1 = glyph->t1;
-// 
-// 			int x0  = (int)( pen.x + glyph->offset_x );
-// 			int y0  = (int)( pen.y + glyph->offset_y );
-// 			int x1  = (int)( x0 + glyph->width );
-// 			int y1  = (int)( y0 - glyph->height );
-// 
-// 			glBegin( GL_POLYGON );
-// 			{
-// 				glTexCoord2f(s0,t0 );glVertex3f( x0, y0, 0 );
-// 				glTexCoord2f(s0,t1 );glVertex3f( x0, y1, 0 );
-// 				glTexCoord2f(s1,t1 );glVertex3f( x1, y1, 0 );
-// 				glTexCoord2f(s1,t0 );glVertex3f( x1, y0, 0 );
-// 
-// 			}
-// 
-// 			pen.x += glyph->advance_x;
-// 			glEnd();
-// 		}
-// 
-// 		pen.y += 10;
-// 		pen.x = 1;
-// 	}
+	std::string s( "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijkl" ); 
+
+	glm::vec2 pen( 1, 50 );
+
+	for ( int i = 0; i < 100; ++i )
+	{
+		for ( auto it = s.begin(); it != s.end(); ++it )
+		{
+			char cha = *it;
+
+			auto glyph = FONT->getGlyph( &cha );
+
+			float kerning =  0.0f;
+			if( it !=  s.begin() )
+			{
+				kerning = glyph->getKerning( &cha );
+			}
+			pen.x += kerning;
+
+
+			float s0 = glyph->s0;
+			float t0 = glyph->t0;
+			float s1 = glyph->s1;
+			float t1 = glyph->t1;
+
+			int x0  = (int)( pen.x + glyph->offset_x );
+			int y0  = (int)( pen.y + glyph->offset_y );
+			int x1  = (int)( x0 + glyph->width );
+			int y1  = (int)( y0 - glyph->height );
+
+			glBegin( GL_POLYGON );
+			{
+				glTexCoord2f(s0,t0 );glVertex3f( x0, y0, 0 );
+				glTexCoord2f(s0,t1 );glVertex3f( x0, y1, 0 );
+				glTexCoord2f(s1,t1 );glVertex3f( x1, y1, 0 );
+				glTexCoord2f(s1,t0 );glVertex3f( x1, y0, 0 );
+
+			}
+
+			pen.x += glyph->advance_x;
+			glEnd();
+		}
+
+		pen.y += 10;
+		pen.x = 1;
+	}
 
 	auto glyph = FONT->getGlyph( "Q" );
 	float s0 = glyph->s0;

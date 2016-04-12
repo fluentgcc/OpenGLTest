@@ -36,5 +36,6 @@
 // 
 // 	std::vector< ftgl::texture_font* > fonts;
 // 
+// };
 
 #endif
