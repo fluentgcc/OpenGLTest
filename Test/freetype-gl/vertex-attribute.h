@@ -2,6 +2,7 @@
 #define __VERTEX_ATTRIBUTE_H__
 
 #include "opengl.h"
+
 /**
  * Besides the required vertex position, vertices can have several other
  * numeric attributes. Each is specified in the format string with a letter,

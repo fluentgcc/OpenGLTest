@@ -152,10 +152,22 @@ namespace ftgl
 		size_t loadGlyphs( const char* codepoints );
 
 
-		inline float getHeight() { return this->height; }
+		
 		inline texture_atlas* getAtlas(){ return this->atlas; }
 		inline const char* getFileName(){ return this->filename; }
 
+
+		inline float getAscender(){ return this->ascender; }
+		inline float getDescender(){ return this->descender; }
+		inline float getLinegap(){ return this->linegap; }
+		inline float getHeight() { return this->height; }
+		inline int	 getKerningStatus(){ return this->kerning; }
+
+
+		void setOutlineType( int type ){ this->outline_type = type; };
+		void setOutlineThickness( float thickness ){ this->outline_thickness = thickness; }
+		void setHinting( int b ){ this->hinting = b; }
+		void setKerningStatus( int b ){ this->kerning = b; }
 
 	private:
 		int loadFace( float size, FT_Library *library, FT_Face *face );
@@ -283,6 +295,10 @@ namespace ftgl
 		* formats.
 		*/
 		float underline_thickness;
+
+
+		//ÎªÁËupload atlas;
+		bool upload_flag_;
 
 	};
 

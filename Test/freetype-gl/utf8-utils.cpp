@@ -1,6 +1,7 @@
 #include <string.h>
 #include "utf8-utils.h"
-
+#include <Windows.h>
+#include <string>
 // ----------------------------------------------------- utf8_surrogate_len ---
 size_t ftgl::utf8_surrogate_len( const char* character )
 {
@@ -75,3 +76,28 @@ uint32_t ftgl::utf8_to_utf32( const char * character )
 
     return result;
 }
+
+const char* ftgl::GBK_to_utf8( const char* string )
+{
+	//todo£º Î´Íê³É£¬ÓÐ´íÎó;
+
+	WCHAR * str1;  
+	int n = MultiByteToWideChar( CP_ACP, 0,string, -1, NULL, 0 );
+	str1 = new WCHAR[n];
+	MultiByteToWideChar( CP_ACP, 0, string, -1, str1, n );
+
+	n = WideCharToMultiByte( CP_UTF8, 0, str1, -1, NULL, 0, NULL, NULL);  
+	char * str2 = new char[n];
+	WideCharToMultiByte(CP_UTF8, 0, str1, -1, str2, n, NULL, NULL);  
+	
+//	std::string strOutUTF8 = str2;  
+	delete[]str1;  
+	str1 = NULL;  
+// 	delete[]str2;  
+// 	str2 = NULL;  
+//	return strOutUTF8.c_str();
+
+	return str2;
+}
+
+

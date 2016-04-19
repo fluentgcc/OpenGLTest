@@ -106,7 +106,7 @@ namespace ftgl
 
 	private:
 
-		//注意，修改数据时需用引用; glm::ivec3* v = &modes[i];
+		//注意，修改数据时需用引用; glm::ivec3* v = &nodes[i];
 		std::vector<glm::ivec3>  nodes;			//Allocated nodes
 
 		size_t width;				//Width (in pixels) of the underlying texture

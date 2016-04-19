@@ -3,8 +3,10 @@
 
 #include "opengl.h"
 #include "vertex-attribute.h"
-#include <vector_t.h>
 #include <vector>
+#include "vector_t.h"
+#include <glm/glm.hpp>
+#include <glm/fwd.hpp>
 
 namespace ftgl 
 {
@@ -33,12 +35,9 @@ public:
 	void print();								//Print information about a vertex buffer
 
 	void render( GLenum mode );					//Render vertex buffer. @mode: render mode
-	void renderItem( size_t index  );			//Render 特定Item. @index: index of the item to be rendered
-	void renderSetup(  GLenum mode );			//Prepare for render;
-	void renderFinish();						//Finish reder;
 
-	void upload();								// Upload buffer to GPU memory.
 	void clear();								// Clear all items.
+
 
 	//-----对verteces和indices的操作-------;
 	void pushBackIndices( const GLuint * indices, const size_t icount );
@@ -61,6 +60,13 @@ public:
 	//---------------------------------------;
 
 private:
+	void renderItem( size_t index  );			//Render 特定Item. @index: index of the item to be rendered
+	void renderSetup(  GLenum mode );			//Prepare for render;
+	void renderFinish();						//Finish reder;
+
+	void upload();								// Upload buffer to GPU memory.
+
+private:
 
     char * format;					/** Format of the vertex buffer. */
 
@@ -70,9 +76,11 @@ private:
 
     GLuint vertices_id;				/** GL identity of the vertices buffer. */
 
-	vector_t * vertices;			/** Vector of vertices. */
-    vector_t * indices;				/** Vector of indices. */
+	vector_t* vertices;				/** Vector of vertices. */
 
+    vector_t* indices;				/** Vector of indices. */
+
+    
     GLuint indices_id;				/** GL identity of the indices buffer. */
 
     size_t GPU_vsize;				/** Current size of the vertices buffer in GPU */
@@ -82,9 +90,24 @@ private:
 
     char state;						/** Whether the vertex buffer needs to be uploaded to GPU memory. */
 
-    vector_t * items;				 /** Individual items */
-  
+	//vstart
+	//vcount
+	//istart
+	//icount
+
+	typedef struct item_t
+	{
+		int vstart;
+		int vcount;
+		int istart;
+		int icount;
+
+	}item_t;
+
+	vector_t* items;				 /** Individual items */
+
     vertex_attribute *attributes[MAX_VERTEX_ATTRIBUTE];		  /** Array of attributes. */
+
 };
 
 }

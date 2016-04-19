@@ -19,7 +19,6 @@
 
 // ----------------------------------------------------------------------------
 
-
 ftgl::vertex_buffer::vertex_buffer(const char* format)
 {
 	size_t i, index = 0, stride = 0;
@@ -41,7 +40,7 @@ ftgl::vertex_buffer::vertex_buffer(const char* format)
 		GLuint attribute_size = 0;
 		end = (char *) (strchr(start+1, ','));
 
-		if ( end == NULL )
+		if (end == NULL)
 		{
 			desc = strdup( start );
 		}
@@ -56,18 +55,18 @@ ftgl::vertex_buffer::vertex_buffer(const char* format)
 
 		switch( attribute->type )
 		{
-		case GL_BOOL:           attribute_size = sizeof(GLboolean); break;
-		case GL_BYTE:           attribute_size = sizeof(GLbyte); break;
-		case GL_UNSIGNED_BYTE:  attribute_size = sizeof(GLubyte); break;
-		case GL_SHORT:          attribute_size = sizeof(GLshort); break;
-		case GL_UNSIGNED_SHORT: attribute_size = sizeof(GLushort); break;
-		case GL_INT:            attribute_size = sizeof(GLint); break;
-		case GL_UNSIGNED_INT:   attribute_size = sizeof(GLuint); break;
-		case GL_FLOAT:          attribute_size = sizeof(GLfloat); break;
+		case GL_BOOL:           attribute_size = sizeof(GLboolean);		break;
+		case GL_BYTE:           attribute_size = sizeof(GLbyte);		break;
+		case GL_UNSIGNED_BYTE:  attribute_size = sizeof(GLubyte);		break;
+		case GL_SHORT:          attribute_size = sizeof(GLshort);		break;
+		case GL_UNSIGNED_SHORT: attribute_size = sizeof(GLushort);		break;
+		case GL_INT:            attribute_size = sizeof(GLint);			break;
+		case GL_UNSIGNED_INT:   attribute_size = sizeof(GLuint);		break;
+		case GL_FLOAT:          attribute_size = sizeof(GLfloat);		break;
 		default:                attribute_size = 0;
 		}
-		stride  += attribute->size*attribute_size;
-		pointer += attribute->size*attribute_size;
+		stride  += attribute->size * attribute_size;
+		pointer += attribute->size * attribute_size;
 		this->attributes[index] = attribute;
 		index++;
 	} while ( end && (index < MAX_VERTEX_ATTRIBUTE) );
@@ -81,15 +80,15 @@ ftgl::vertex_buffer::vertex_buffer(const char* format)
 	this->VAO_id = 0;
 #endif
 
-	this->vertices = vector_new( stride );
+	this->vertices = new vector_t( stride );
 	this->vertices_id  = 0;
 	this->GPU_vsize = 0;
 
-	this->indices = vector_new( sizeof(GLuint) );
+	this->indices = new vector_t( sizeof(GLuint) );
 	this->indices_id  = 0;
 	this->GPU_isize = 0;
 
-	this->items = vector_new( sizeof( glm::ivec4 ) );
+	this->items = new vector_t( sizeof( item_t ) );
 	this->state = DIRTY;
 	this->mode = GL_TRIANGLES;
 }
@@ -103,6 +102,7 @@ ftgl::vertex_buffer::~vertex_buffer()
 		if( this->attributes[i] )
 		{
 			delete this->attributes[i];
+			this->attributes[i] = nullptr;
 		}
 	}
 
@@ -114,7 +114,7 @@ ftgl::vertex_buffer::~vertex_buffer()
 	this->VAO_id = 0;
 #endif
 
-	vector_delete( this->vertices );
+	delete this->vertices;
 	this->vertices = 0;
 	if( this->vertices_id )
 	{
@@ -122,7 +122,7 @@ ftgl::vertex_buffer::~vertex_buffer()
 	}
 	this->vertices_id = 0;
 
-	vector_delete( this->indices );
+	delete this->indices;
 	this->indices = 0;
 	if( this->indices_id )
 	{
@@ -130,7 +130,7 @@ ftgl::vertex_buffer::~vertex_buffer()
 	}
 	this->indices_id = 0;
 
-	vector_delete( this->items );
+	delete this->items;
 
 	if( this->format )
 	{
@@ -138,12 +138,12 @@ ftgl::vertex_buffer::~vertex_buffer()
 	}
 	this->format = 0;
 	this->state = 0;
-
+	free( this );
 }
 
 size_t ftgl::vertex_buffer::getSize()
 {
-	return vector_size( this->items );
+	return this->items->size();
 }
 
 const char* ftgl::vertex_buffer::getFormat()
@@ -166,8 +166,7 @@ void ftgl::vertex_buffer::print()
 		"GL_VOID"
 	};
 
-	fprintf( stderr, "%ld vertices, %ld indices\n",
-		vector_size( this->vertices ), vector_size( this->indices ) );
+	fprintf( stderr, "%ld vertices, %ld indices\n",this->vertices->size(), this->indices->size() );
 	while( this->attributes[i] )
 	{
 		int j = 8;
@@ -190,6 +189,195 @@ void ftgl::vertex_buffer::print()
 			this->attributes[i]->pointer);
 
 		i += 1;
+	}
+}
+
+void ftgl::vertex_buffer::render(GLenum mode)
+{
+	size_t vcount = this->vertices->size();
+	size_t icount = this->indices->size();
+
+	this->renderSetup(  mode );
+
+	if( icount )
+	{
+		glDrawElements( mode, icount, GL_UNSIGNED_INT, 0 );
+	}
+	else
+	{
+		glDrawArrays( mode, 0, vcount );
+	}
+
+	this->renderFinish();
+}
+
+void ftgl::vertex_buffer::clear()
+{
+	this->state = FROZEN;
+	this->indices->clear();
+	this->vertices->clear();
+	this->items->clear();
+	this->state = DIRTY;
+}
+
+void ftgl::vertex_buffer::pushBackIndices(const GLuint * indices, const size_t icount)
+{
+	this->state |= DIRTY;
+	this->indices->push_back_data( indices, icount );
+}
+
+void ftgl::vertex_buffer::pushBackVertices(const void * vertices, const size_t vcount)
+{
+	this->state |= DIRTY;
+	this->vertices->push_back_data( vertices, vcount );
+}
+
+void ftgl::vertex_buffer::insertIndices(const size_t index, const GLuint *indices, const size_t count)
+{
+	assert( this->indices );
+	assert( index < this->indices->size() + 1 );
+
+	this->state |= DIRTY;
+	this->indices->insert_data( index, indices, count );
+}
+
+void ftgl::vertex_buffer::insertVertices(const size_t index, const void *vertices, const size_t vcount)
+{
+	size_t i;
+	assert( this );
+	assert( this->vertices );
+	assert( index < this->vertices->size() + 1 );
+
+	this->state |= DIRTY;
+
+	for( i=0; i < this->indices->size(); ++i )
+	{
+		if( *(GLuint *)(  this->indices->at(i) ) > index )
+		{
+			*(GLuint *)( this->indices->at(i) ) += index;
+		}
+	}
+	this->vertices->insert_data( index, vertices, vcount );
+}
+
+void ftgl::vertex_buffer::eraseIndices(const size_t first, const size_t last)
+{
+	assert( this->indices );
+	assert( first < this->indices->size() );
+	assert( (last) <= this->indices->size() );
+
+	this->indices->erase_range( first, last );
+}
+
+void ftgl::vertex_buffer::eraseVertices(const size_t first, const size_t last)
+{
+	size_t i;
+	assert( this->vertices );
+	assert( first < this->vertices->size() );
+	assert( last <= this->vertices->size() );
+	assert( last > first );
+
+	this->state |= DIRTY;
+	for( i=0; i < this->indices->size(); ++i )
+	{
+		if( *(GLuint *)( this->indices->at(i) ) > first )
+		{
+			*(GLuint *)( this->indices->at(i) ) -= (last-first);
+		}
+	}
+	this->vertices->erase_range( first, last );
+}
+
+size_t ftgl::vertex_buffer::pushBack(const void * vertices, const size_t vcount, const GLuint * indices, const size_t icount)
+{
+	return this->insert( this->items->size(), vertices, vcount, indices, icount );
+}
+
+size_t ftgl::vertex_buffer::insert(const size_t index, const void * vertices, const size_t vcount, const GLuint * indices, const size_t icount)
+{
+	size_t vstart, istart, i;
+	item_t item;
+	assert( vertices );
+	assert( indices );
+
+	this->state = FROZEN;
+
+	// Push back vertices
+	vstart = this->vertices->size();
+	this->pushBackVertices( vertices, vcount );
+
+	// Push back indices
+	istart = this->indices->size();
+	this->pushBackIndices( indices, icount );
+
+	// Update indices within the vertex buffer
+	for( i=0; i<icount; ++i )
+	{
+		*(GLuint *)( this->indices->at( istart+i ) ) += vstart;
+	}
+
+	// Insert item
+	item.vstart = vstart;
+	item.vcount = vcount;
+	item.istart = istart;
+	item.icount = icount;
+	this->items->insert( index, &item );
+
+	this->state = DIRTY;
+	return index;
+}
+
+void ftgl::vertex_buffer::erase(const size_t index)
+{
+	item_t * item;
+	int vstart;
+	size_t vcount, istart, icount, i;
+
+	assert( index <  this->items->size() );
+
+	item = (item_t *) this->items->at( index );
+	vstart = item->vstart;
+	vcount = item->vcount;
+	istart = item->istart;
+	icount = item->icount;
+
+	// Update items
+	for( i=0; i< this->items->size(); ++i )
+	{
+		item_t * item = ( item_t * ) ( this->items->at( i ) );
+		if( item->vstart > vstart)
+		{
+			item->vstart -= vcount;
+			item->istart -= icount;
+		}
+	}
+
+	this->state = FROZEN;
+
+	this->eraseIndices( istart, istart+icount );
+	this->eraseVertices( vstart, vstart+vcount );
+	this->items->erase( index );
+
+	this->state = DIRTY;
+}
+
+void ftgl::vertex_buffer::renderItem(size_t index)
+{
+	assert( index < this->items->size() );
+
+	item_t * item = ( item_t *) this->items->at( index );
+
+	if( this->indices->size() )
+	{
+		size_t start = item->istart;
+		size_t count = item->icount;
+		glDrawElements( this->mode, count, GL_UNSIGNED_INT, ( void * )( start * sizeof( GLuint ) ) );
+	}
+	else if( this->vertices->size() )
+	{
+		size_t start = item->vstart;
+		size_t count = item->vcount;
+		glDrawArrays( this->mode, start * this->vertices->item_size(), count );
 	}
 }
 
@@ -221,14 +409,14 @@ void ftgl::vertex_buffer::renderSetup(GLenum mode)
 
 		for( i=0; i<MAX_VERTEX_ATTRIBUTE; ++i )
 		{
-			vertex_attribute *attribute = this->attributes[i];
+			vertex_attribute_t *attribute = this->attributes[i];
 			if( attribute == 0 )
 			{
 				continue;
 			}
 			else
 			{
-				attribute->enable();
+				vertex_attribute_enable( attribute );
 			}
 		}
 
@@ -259,7 +447,7 @@ void ftgl::vertex_buffer::renderSetup(GLenum mode)
 		}
 	}
 
-	if( this->indices->size )
+	if( this->indices->size() )
 	{
 		glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, this->indices_id );
 	}
@@ -275,8 +463,6 @@ void ftgl::vertex_buffer::renderFinish()
 #else
 	int i;
 
-	unsigned int e = 0;
-
 	for( i=0; i<MAX_VERTEX_ATTRIBUTE; ++i )
 	{
 		vertex_attribute *attribute = this->attributes[i];
@@ -287,54 +473,12 @@ void ftgl::vertex_buffer::renderFinish()
 		else
 		{
 			glDisableVertexAttribArray( attribute->index );
-			e =  glGetError();
-
 		}
 	}
-	e =  glGetError();
+
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 #endif
-}
-
-void ftgl::vertex_buffer::render(GLenum mode)
-{
-	size_t vcount = this->vertices->size;
-	size_t icount = this->indices->size;
-	
-	this->renderSetup( mode );
-
-	if( icount )
-	{
-		glDrawElements( mode, icount, GL_UNSIGNED_INT, 0 );
-	}
-	else
-	{
-		glDrawArrays( mode, 0, vcount );
-	}
-
-	this->renderFinish();
-}
-
-void ftgl::vertex_buffer::renderItem(size_t index)
-{
-	glm::ivec4 * item = ( glm::ivec4 *) vector_get( this->items, index );
-
-	assert( index < vector_size( this->items ) );
-
-
-	if( this->indices->size )
-	{
-		size_t start = item->z;
-		size_t count = item->w;
-		glDrawElements( this->mode, count, GL_UNSIGNED_INT, (void *)(start*sizeof(GLuint)) );
-	}
-	else if( this->vertices->size )
-	{
-		size_t start = item->x;
-		size_t count = item->y;
-		glDrawArrays( this->mode, start*this->vertices->item_size, count);
-	}
 }
 
 void ftgl::vertex_buffer::upload()
@@ -355,8 +499,8 @@ void ftgl::vertex_buffer::upload()
 		glGenBuffers( 1, &this->indices_id );
 	}
 
-	vsize = this->vertices->size*this->vertices->item_size;
-	isize = this->indices->size*this->indices->item_size;
+	vsize = this->vertices->size() *this->vertices->item_size();
+	isize = this->indices->size() *this->indices->item_size();
 
 
 	// Always upload vertices first such that indices do not point to non
@@ -367,13 +511,13 @@ void ftgl::vertex_buffer::upload()
 	if( vsize != this->GPU_vsize )
 	{
 		glBufferData( GL_ARRAY_BUFFER,
-			vsize, this->vertices->items, GL_DYNAMIC_DRAW );
+			vsize, this->vertices->front(), GL_DYNAMIC_DRAW );
 		this->GPU_vsize = vsize;
 	}
 	else
 	{
 		glBufferSubData( GL_ARRAY_BUFFER,
-			0, vsize, this->vertices->items );
+			0, vsize, this->vertices->front() );
 	}
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 
@@ -382,168 +526,13 @@ void ftgl::vertex_buffer::upload()
 	if( isize != this->GPU_isize )
 	{
 		glBufferData( GL_ELEMENT_ARRAY_BUFFER,
-			isize, this->indices->items, GL_DYNAMIC_DRAW );
+			isize, this->indices->front(), GL_DYNAMIC_DRAW );
 		this->GPU_isize = isize;
 	}
 	else
 	{
 		glBufferSubData( GL_ELEMENT_ARRAY_BUFFER,
-			0, isize, this->indices->items );
+			0, isize, this->indices->front() );
 	}
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
-}
-
-void ftgl::vertex_buffer::clear()
-{
-	this->state = FROZEN;
-	vector_clear( this->indices );
-	vector_clear( this->vertices );
-	vector_clear( this->items );
-	this->state = DIRTY;
-}
-
-void ftgl::vertex_buffer::pushBackIndices(const GLuint * indices, const size_t icount)
-{
-	this->state |= DIRTY;
-	vector_push_back_data( this->indices, indices, icount );
-}
-
-void ftgl::vertex_buffer::pushBackVertices(const void * vertices, const size_t vcount)
-{
-	this->state |= DIRTY;
-	vector_push_back_data( this->vertices, vertices, vcount );
-}
-
-void ftgl::vertex_buffer::insertIndices(const size_t index, const GLuint *indices, const size_t icount)
-{
-	assert( this->indices );
-	assert( index < this->indices->size+1 );
-
-	this->state |= DIRTY;
-	vector_insert_data( this->indices, index, indices, icount );
-}
-
-void ftgl::vertex_buffer::insertVertices(const size_t index, const void *vertices, const size_t vcount)
-{
-	size_t i;
-
-	assert( this->vertices );
-	assert( index < this->vertices->size+1 );
-
-	this->state |= DIRTY;
-
-	for( i=0; i < this->indices->size; ++i )
-	{
-		if( *(GLuint *)(vector_get( this->indices, i )) > index )
-		{
-			*(GLuint *)(vector_get( this->indices, i )) += index;
-		}
-	}
-
-	vector_insert_data( this->vertices, index, vertices, vcount );
-
-}
-
-void ftgl::vertex_buffer::eraseIndices(const size_t first, const size_t last)
-{
-	assert( this->indices );
-	assert( first < this->indices->size );
-	assert( (last) <= this->indices->size );
-
-	this->state |= DIRTY;
-	vector_erase_range( this->indices, first, last );
-}
-
-void ftgl::vertex_buffer::eraseVertices(const size_t first, const size_t last)
-{
-	size_t i;
-
-	assert( this->vertices );
-	assert( first < this->vertices->size );
-	assert( last <= this->vertices->size );
-	assert( last > first );
-
-	this->state |= DIRTY;
-	for( i=0; i<this->indices->size; ++i )
-	{
-		if( *(GLuint *)(vector_get( this->indices, i )) > first )
-		{
-			*(GLuint *)(vector_get( this->indices, i )) -= (last-first);
-		}
-	}
-	vector_erase_range( this->vertices, first, last );
-}
-
-size_t ftgl::vertex_buffer::pushBack(const void * vertices, const size_t vcount, const GLuint * indices, const size_t icount)
-{
-	return this->insert( vector_size( this->items ),
-		vertices, vcount, indices, icount );
-}
-
-size_t ftgl::vertex_buffer::insert(const size_t index, const void * vertices, const size_t vcount, const GLuint * indices, const size_t icount)
-{
-	size_t vstart, istart, i;
-	glm::ivec4 item;
-
-	assert( vertices );
-	assert( indices );
-
-	this->state = FROZEN;
-
-	// Push back vertices
-	vstart = vector_size( this->vertices );
-	this->pushBackVertices( vertices, vcount );
-
-	// Push back indices
-	istart = vector_size( this->indices );
-	this->pushBackIndices( indices, icount );
-
-	// Update indices within the vertex buffer
-	for( i=0; i<icount; ++i )
-	{
-		*(GLuint *)(vector_get( this->indices, istart+i )) += vstart;
-	}
-
-	// Insert item
-	item.x = vstart;
-	item.y = vcount;
-	item.z = istart;
-	item.w = icount;
-	vector_insert( this->items, index, &item );
-
-	this->state = DIRTY;
-	return index;
-}
-
-void ftgl::vertex_buffer::erase(const size_t index)
-{
-	glm::ivec4 * item;
-	int vstart;
-	size_t vcount, istart, icount, i;
-
-	assert( this );
-	assert( index < vector_size( this->items ) );
-
-	item = (glm::ivec4 *) vector_get( this->items, index );
-	vstart = item->x;
-	vcount = item->y;
-	istart = item->z;
-	icount = item->w;
-
-	// Update items
-	for( i=0; i<vector_size(this->items); ++i )
-	{
-		glm::ivec4 * item = ( glm::ivec4 *) vector_get( this->items, i );
-		if( item->x > vstart)
-		{
-			item->x -= vcount;
-			item->z -= icount;
-		}
-	}
-
-	this->state = FROZEN;
-	this->eraseIndices( istart, istart+icount );
-	this->eraseVertices( vstart, vstart+vcount );
-	vector_erase( this->items, index );
-	this->state = DIRTY;
 }

@@ -169,7 +169,11 @@ ftgl::texture_glyph* ftgl::texture_font::getGlyph(const char* codepoint)
     /* Glyph has not been already loaded */
     if( this->loadGlyphs( codepoint ) == 0 )
     {
-        return this->findGlyph( codepoint );
+		//--------------
+		this->upload_flag_ = true;
+        //---------------
+
+		return this->findGlyph( codepoint );
     }
     return NULL;
 
