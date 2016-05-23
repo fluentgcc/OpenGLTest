@@ -120,6 +120,7 @@ namespace ftgl
 		unsigned int id;			//Texture identity (OpenGL)
 
 		unsigned char * data;		//Atlas data
+
 	};
 }
 

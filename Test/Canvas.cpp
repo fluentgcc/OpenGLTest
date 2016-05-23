@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <Windows.h>
 
 #include <QtGui/QtEvents>
 #include <QtCore/QString>
@@ -37,7 +38,7 @@ typedef struct {
 	float x, y, z;    // position
 	float s, t;       // texture
 	float r, g, b, a; // color
-} vertex_t;
+} vertex_tt;
 
 
 void add_text( vertex_buffer* buffer, texture_font* font,
@@ -65,7 +66,7 @@ void add_text( vertex_buffer* buffer, texture_font* font,
 			float s1 = glyph->s1;
 			float t1 = glyph->t1;
 			GLuint indices[6] = {0,1,2, 0,2,3};
-			vertex_t vertices[4] = { 
+			vertex_tt vertices[4] = { 
 			{ x0,y0,0,  s0,t0,  r,g,b,a },
 			{ x0,y1,0,  s0,t1,  r,g,b,a },
 			{ x1,y1,0,  s1,t1,  r,g,b,a },
@@ -81,13 +82,29 @@ Canvas::Canvas(QWidget *parent)
 	: QOpenGLWidget(parent)
 {
 // 	std::vector< unsigned int > ints;
-// 	std::wstring s = L"a2王二";
+// 	std::wstring s = L"王";
 // 	for ( auto it = s.begin(); it != s.end(); ++ it )
 // 	{
 // 		ints.push_back( *it );
 // 
 // 	}
 // 
+// 	const char* ss = "王";
+// 
+// 	WCHAR * str1;  
+// 	int n = MultiByteToWideChar( CP_ACP, 0,ss, -1, NULL, 0 );
+// 	str1 = new WCHAR[n];
+// 	MultiByteToWideChar( CP_ACP, 0, ss, -1, str1, n );
+// 
+// 	n = WideCharToMultiByte( CP_UTF8, 0, str1, -1, NULL, 0, NULL, NULL);  
+// 	char * str2 = new char[n];
+// 	WideCharToMultiByte(CP_UTF8, 0, str1, -1, str2, n, NULL, NULL); 
+// 
+// 	for ( int i = 0; i < n; ++i )
+// 	{
+// 		unsigned char a = str2[i];
+// 		ints.push_back( a );
+// 	}
 // 
 // 	int bbb= 211;
 }
@@ -119,14 +136,15 @@ void Canvas::initializeGL()
 	err = glGetError();
 	GL_CHECK_ERRORS
 
-		std::cout << "\tUsing GLEW "	<< glewGetString( GLEW_VERSION )<<endl;
+	std::cout << "\tUsing GLEW "	<< glewGetString( GLEW_VERSION )<<endl;
 	std::cout << "\tVendor: "		<< glGetString (  GL_VENDOR )<<endl;
 	std::cout << "\tRenderer: "		<< glGetString (  GL_RENDERER )<<endl;
 	std::cout << "\tVersion: "		<< glGetString (  GL_VERSION )<<endl;
 	std::cout << "\tGLSL: "			<< glGetString (  GL_SHADING_LANGUAGE_VERSION )<<endl;
 	GL_CHECK_ERRORS
 
-	glClearColor( 0.2f, 0.3f, 0.3f, 1.0f );
+	glClearColor( 0.30f, 0.30f, 0.20f, 1.0f );
+	//glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
 
 // 	glEnable(GL_BLEND);
 // 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -135,40 +153,27 @@ void Canvas::initializeGL()
 
 // 	atlas = new texture_atlas( 512, 512, 1 );
 // 	const char * filename = "C:/Windows/Fonts/msyh.ttf";
-// 	char * text = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~		";
+// 	char * text = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~	王送萨芬合家欢疯狂青蛙净额汇入";
+// 	const char* text2 = GBK_to_utf8( text );
 // 
 // 	FONT = new texture_font( atlas, 32, filename );
-// 	FONT->loadGlyphs( text );
+// 	FONT->loadGlyphs( text2 );
+// 	
+// 	const char* str = "王";
+// 	const char* str2 = GBK_to_utf8( str );
+// 
+// 	FONT->loadGlyphs( str2 );
+// 
+// 	atlas->upload();
+//-----------------------------------------------------------------------------------
 
-	zy_font_manager::instance()->init( 512, 512, 1 );
-
-	FONT = zy_font_manager::instance()->getFont();
-
-
-	text_layout = new zy_text_layout( nullptr, FONT );
-
-	glm::vec2 pos( 20,700 );
-	text_layout->addText( &pos,	"Adsfdsfefe\n"
-								"bdfewafefaaefewq89890\n"
-								"sdfawefwfwqefqfaC\n"
-								"feqefqfdsafqfd\n"
-								"A\n"
-								"A\n"
-								"A\n"
-								"A\n"
-								"A\n"
-								"A\n"
-								"A\n"
-								"A\n"
-								"A\n"
-						);
 // 	
 // 	QString str = QString::fromLocal8Bit( "ABCDEFGHIJKLMNOPQRSTUVWXYZ" );
 // 
 // 	FONT->loadGlyphs( str.toStdString().c_str() ); 
-
-	//delete font;
-
+// 
+// 	//delete font;
+// 
 // 	unsigned char* map;
 // 
 // 	map = ftgl::make_distance_mapb( atlas->getData(), atlas->getWidth(), atlas->getHeight()  );
@@ -176,28 +181,46 @@ void Canvas::initializeGL()
 // 	memcpy( atlas->getData(), map, atlas->getWidth()*atlas->getHeight()*sizeof( unsigned char ) );
 // 	free(map);
 // 	FONT->getAtlas()->upload();
+//-----------------------------------------------------------------------------------
+	zy_font_manager::instance()->init( 512, 512, 1 );
 
-	GL_CHECK_ERRORS
+	FONT = zy_font_manager::instance()->getFont();
 
-	unsigned int a = FONT->getAtlas()->getTexID();
-	glBindTexture( GL_TEXTURE_2D, a );
-
-	shader.LoadFromFile( GL_VERTEX_SHADER, "E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/v3f-t2f-c4f.vert" );
-	shader.LoadFromFile( GL_FRAGMENT_SHADER,"E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/v3f-t2f-c4f.frag" );
+	std::string vert_file = "E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/my-sdf.vert";
+	std::string frag_file = "E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/my-sdf.frag";
+	
+	shader.LoadFromFile( GL_VERTEX_SHADER, vert_file );
+	shader.LoadFromFile( GL_FRAGMENT_SHADER, frag_file );
 	shader.CreateAndLinkProgram();
+// 	shader.Use();
+// 	{
+// 		shader.AddUniform( "MVP" );
+// 		shader.AddUniform( "Color" );
+// 	}
+// 	shader.UnUse();
 
-	GL_CHECK_ERRORS
 
-	projection = glm::mat4( 1.0 );
-	model	   = glm::mat4( 1.0 );
-	view	   = glm::mat4( 1.0 );
+	text_layout = new zy_text_layout( &shader, FONT );
+	text_layout->setLineLength( 1000 );
+	glm::vec2 pos( 20,500 );
+	text_layout->addText( &pos,	"Adsfdsfefe\n"
+		"bdfewafefaaefewq89890\n"
+		"sdfawefwfwqefqfaC\n"
+		"王送使得房价owe放假哈撒\n"
+		"撒反对撒地方去维护荣辱观\n"
+		"ada\n"
+		"af\n"
+		);
 
-	shader.Use();
-	shader.AddUniform( "texture" );
-	shader.AddUniform( "model" );
-	shader.AddUniform( "view" );
-	shader.AddUniform( "projection" );
-	shader.UnUse();
+	//text_layout->setAlign( Align::ALIGN_RIGHT );
+// 	glm::vec2 pos2( 20,250 );
+// 	text_layout->addText( &pos2,	"Adsfdsfefe\n"
+// 		"bdfewafefaaefewq89890\n"
+// 		"sdfawefwfwqefqfaC\n"
+// 		"王送使得房价owe放假哈撒\n"
+// 		"撒反对撒地方去维护荣辱观\n"
+// 		);
+//-----------------------------------------------------------
 
 	GL_CHECK_ERRORS
 }
@@ -208,18 +231,21 @@ void Canvas::paintGL()
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	glEnable( GL_TEXTURE_2D );
-	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-//----------------------------------------------------------
-	glBindTexture( GL_TEXTURE_2D, FONT->getAtlas()->getTexID() );
-	glColor3f( 1.0, 1.0, 0.0 );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
 
-// 	std::string s( "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijkl" ); 
+
+	glEnable( GL_TEXTURE_2D );
+ 	glEnable( GL_BLEND );
+ 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+//----------------------------------------------------------
+	glBindTexture( GL_TEXTURE_2D, FONT->getAtlas()->getTexID() );;
+
+// 	std::string s( "!\*+,-.9:;<BCRSTabcdefghijkl" ); 
 // 
 // 	glm::vec2 pen( 1, 50 );
 // 
-// 	for ( int i = 0; i < 100; ++i )
+// 	for ( int i = 0; i < 10; ++i )
 // 	{
 // 		for ( auto it = s.begin(); it != s.end(); ++it )
 // 		{
@@ -258,37 +284,64 @@ void Canvas::paintGL()
 // 			glEnd();
 // 		}
 // 
-// 		pen.y += 10;
+// 		pen.y += 30;
 // 		pen.x = 1;
 // 	}
 
+//--------------------------------------
+// 	glMatrixMode( GL_MODELVIEW );
+// 	glLoadIdentity();
+// 	glPushMatrix();
+// 	glLoadMatrixd( glm::value_ptr( this->model_view_ ) );
 
 	text_layout->render();
 
+	glBindTexture( GL_TEXTURE_2D, 0 );
 
-	QString str = QString::fromLocal8Bit( "Q" );
-	auto glyph = FONT->getGlyph( str.toStdString().c_str() );
-	float s0 = glyph->s0;
-	float t0 = glyph->t0;
-	float s1 = glyph->s1;
-	float t1 = glyph->t1;
-
-	glm::vec2 pen2( 50.0, 50.0 );
-	int x0  = (int)( pen2.x + glyph->offset_x );
-	int y0  = (int)( pen2.y + glyph->offset_y );
-	int x1  = (int)( x0 + glyph->width );
-	int y1  = (int)( y0 - glyph->height );
-
-	glBegin( GL_POLYGON );
+	auto a = text_layout->getBounds();
+	glColor4f( 1.0, 1.0, 1.0, 1.0 );
+	glBegin( GL_LINE_LOOP );
 	{
-		glTexCoord2f(s0,t0 );glVertex3f( x0, y0, 0 );
-		glTexCoord2f(s0,t1 );glVertex3f( x0, y1, 0 );
-		glTexCoord2f(s1,t1 );glVertex3f( x1, y1, 0 );
-		glTexCoord2f(s1,t0 );glVertex3f( x1, y0, 0 );
-
+		glVertex3f( a.left,				a.top,				0 );
+		glVertex3f( a.left + a.width,	a.top,				0 );
+		glVertex3f( a.left + a.width,	a.top - a.height,	0 );
+		glVertex3f( a.left,				a.top - a.height,	0 );
 	}
 	glEnd();
-	GL_CHECK_ERRORS
+
+
+
+	
+	glScalef( 0.5, 0.5, 0 );
+	glTranslatef( 100, 50, 0 );
+	text_layout->render();
+//--------------------------------------
+// 	const char* str = "王";
+// 	const char* str2 = GBK_to_utf8( str );
+// 
+// 
+// 	auto glyph = FONT->getGlyph( str2 );
+// 	float s0 = glyph->s0;
+// 	float t0 = glyph->t0;
+// 	float s1 = glyph->s1;
+// 	float t1 = glyph->t1;
+// 
+// 	glm::vec2 pen2( 50.0, 50.0 );
+// 	int x0  = (int)( pen2.x + glyph->offset_x );
+// 	int y0  = (int)( pen2.y + glyph->offset_y );
+// 	int x1  = (int)( x0 + glyph->width );
+// 	int y1  = (int)( y0 - glyph->height );
+// 
+// 	glBegin( GL_POLYGON );
+// 	{
+// 		glTexCoord2f(s0,t0 );glVertex3f( x0, y0, 0 );
+// 		glTexCoord2f(s0,t1 );glVertex3f( x0, y1, 0 );
+// 		glTexCoord2f(s1,t1 );glVertex3f( x1, y1, 0 );
+// 		glTexCoord2f(s1,t0 );glVertex3f( x1, y0, 0 );
+// 
+// 	}
+// 	glEnd();
+// 	GL_CHECK_ERRORS
 //----------------------------------------------------------
 
 
@@ -309,11 +362,10 @@ void Canvas::resizeGL( int w, int h )
 	//gluPerspective( 45.0f, ( GLfloat )w / h, 0.1f, 1000.f );
 
 	glOrtho( 0, w, 0, h, -1, 1 );
+	projection = glm::ortho( 0, w, 0, h, -1, 1 );
 
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-
-	projection = glm::ortho( 0, w, 0, h, -1, 1 );
 }
 
 void Canvas::mouseMoveEvent( QMouseEvent* event )
@@ -351,7 +403,6 @@ void Canvas::wheelEvent(QWheelEvent * event)
 
 	int a = event->delta();
 	float b = 1 + a / 1000.0;
-
 
 	this->update();
 

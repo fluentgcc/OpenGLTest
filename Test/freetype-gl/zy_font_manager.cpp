@@ -22,7 +22,7 @@ void zy_font_manager::init(size_t width, size_t height, size_t depth )
 // 	font_->setOutlineType( 1 );
 // 	font_->setOutlineThickness( 0.5 );
 
-	char * text = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
+	char * text = "A!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ ";
 
 	this->font_->loadGlyphs( text );
 	this->atlas_->upload();

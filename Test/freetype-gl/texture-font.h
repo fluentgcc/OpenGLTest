@@ -169,6 +169,10 @@ namespace ftgl
 		void setHinting( int b ){ this->hinting = b; }
 		void setKerningStatus( int b ){ this->kerning = b; }
 
+		//
+		bool getUpdateFlag(){ return this->upload_flag_; }
+		void setUpdateFlag( bool b ){ this->upload_flag_ = b; }
+
 	private:
 		int loadFace( float size, FT_Library *library, FT_Face *face );
 		void generateKerning();
@@ -295,7 +299,6 @@ namespace ftgl
 		* formats.
 		*/
 		float underline_thickness;
-
 
 		//ÎªÁËupload atlas;
 		bool upload_flag_;

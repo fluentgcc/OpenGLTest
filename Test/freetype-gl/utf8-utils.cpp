@@ -79,7 +79,7 @@ uint32_t ftgl::utf8_to_utf32( const char * character )
 
 const char* ftgl::GBK_to_utf8( const char* string )
 {
-	//todo£º Î´Íê³É£¬ÓÐ´íÎó;
+	//todo£º
 
 	WCHAR * str1;  
 	int n = MultiByteToWideChar( CP_ACP, 0,string, -1, NULL, 0 );
