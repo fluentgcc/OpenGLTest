@@ -186,8 +186,8 @@ void Canvas::initializeGL()
 
 	FONT = zy_font_manager::instance()->getFont();
 
-	std::string vert_file = "E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/my-sdf.vert";
-	std::string frag_file = "E:/work/Qt5/Test_14_ogl_basic/Test/freetype-gl/shaders/my-sdf.frag";
+	std::string vert_file = "./freetype-gl/shaders/my-sdf.vert";
+	std::string frag_file = "./freetype-gl/shaders/my-sdf.frag";
 	
 	shader.LoadFromFile( GL_VERTEX_SHADER, vert_file );
 	shader.LoadFromFile( GL_FRAGMENT_SHADER, frag_file );
@@ -202,6 +202,7 @@ void Canvas::initializeGL()
 
 	text_layout = new zy_text_layout( &shader, FONT );
 	text_layout->setLineLength( 1000 );
+
 	glm::vec2 pos( 20,500 );
 	text_layout->addText( &pos,	"Adsfdsfefe\n"
 		"bdfewafefaaefewq89890\n"
@@ -211,6 +212,8 @@ void Canvas::initializeGL()
 		"ada\n"
 		"af\n"
 		);
+	text_layout->setAlign( ALIGN_CENTER );
+
 
 	//text_layout->setAlign( Align::ALIGN_RIGHT );
 // 	glm::vec2 pos2( 20,250 );
@@ -308,13 +311,10 @@ void Canvas::paintGL()
 		glVertex3f( a.left,				a.top - a.height,	0 );
 	}
 	glEnd();
-
-
-
 	
-	glScalef( 0.5, 0.5, 0 );
-	glTranslatef( 100, 50, 0 );
-	text_layout->render();
+// 	glScalef( 0.5, 0.5, 0 );
+// 	glTranslatef( 100, 50, 0 );
+// 	text_layout->render();
 //--------------------------------------
 // 	const char* str = "王";
 // 	const char* str2 = GBK_to_utf8( str );

@@ -76,8 +76,6 @@ public:
 
 	bounds_t getBounds(){ return this->bounds_; }
 
-
-
 	
 private:
 	void addChar( glm::vec2* pen, const char* current, const char* previous );

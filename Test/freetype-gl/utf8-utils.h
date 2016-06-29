@@ -40,8 +40,7 @@ namespace ftgl
 
 
 	/*
-	中文gbk转utf8.现在好像没有成功！！！
-
+	中文gbk转utf8.
 	*/
 	const char*
 		GBK_to_utf8( const char * character );
