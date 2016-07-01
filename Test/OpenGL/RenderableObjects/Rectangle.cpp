@@ -82,7 +82,7 @@ CRectangle::~CRectangle(void)
 
 }
 
-void CRectangle::render(const float* MVP)
+void CRectangle::render( const float* MVP )
 {
 	GL_CHECK_ERRORS
 	this->shader_.Use();

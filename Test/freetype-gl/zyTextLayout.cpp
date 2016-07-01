@@ -1,4 +1,4 @@
-#include "zy_text_layout.h"
+#include "zyTextLayout.h"
 #include "utf8-utils.h"
 #include "distance-field.h"
 
@@ -7,34 +7,38 @@
 #include <math.h>
 
 
-zy_text_layout::zy_text_layout( GLSLShader* shader, texture_font* ft )
+zyTextLayout::zyTextLayout( texture_font* ft )
 	: align_( ALIGN_LEFT ), fixed_line_length_( -1 )
 {
-
-	this->shader_ = shader;
 	this->font_   = ft;
 	this->line_start_ = 0;
+	this->line_length_current_ = 0;
+
+	this->line_descender_ = this->font_->getDescender();
+	this->line_ascender_ = this->font_->getAscender();
+	this->clear();
+
+	this->setBeginPos( glm::vec2( 0, 0 ) );	
 	
 }
 
-zy_text_layout::~zy_text_layout()
+zyTextLayout::~zyTextLayout()
 {
-	
 
 }
 
-void zy_text_layout::render()
-{
 
+void zyTextLayout::render()
+{
 
 	glActiveTexture( GL_TEXTURE0 );
+	glEnable( GL_TEXTURE_2D );
 	glBindTexture( GL_TEXTURE_2D, this->font_->getAtlas()->getTexID() );
 
 // 	glEnable( GL_BLEND );
 // 	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 // 	glBlendColor( 1, 1, 1, 1 );
 
-	this->shader_->Use();
 	glBegin( GL_QUADS );
 	for ( size_t i = 0; i < this->buffer_.size(); ++ i )
 	{
@@ -46,7 +50,6 @@ void zy_text_layout::render()
 		glTexCoord2fv( glm::value_ptr( ch.v3.texture ) );glVertex3fv( glm::value_ptr( ch.v3.vertice ) );
 	}
 	glEnd();
-	this->shader_->UnUse();
 	glBindTexture( GL_TEXTURE_2D, 0 );
 	//this->shader.Use()
 // 	{
@@ -58,89 +61,102 @@ void zy_text_layout::render()
 // 	}
 	//this->shader.UnUse();
 
-	
+// 	glBegin( GL_QUADS );
+// 	for (int i = 0; i < this->lines_.size(); ++ i )
+// 	{
+// 		bounds_t bt = lines_[i].bounds;
+// 
+// 		glVertex2f(  bt.left, bt.top );
+// 		glVertex2f(  bt.left, bt.top - bt.height  );
+// 		glVertex2f(  bt.left + bt.width, bt.top - bt.height );
+// 		glVertex2f(  bt.left + bt.width, bt.top );
+// 		
+// 	}
+// 	glEnd( );
 
 }
 
-void zy_text_layout::addText(glm::vec2* pen , const char* text, size_t length /*= 0 */)
+void zyTextLayout::setBeginPos(glm::vec2& pen)
 {
-	const char* text_u8 = GBK_to_utf8( text );
+	this->pen_current_ = pen;
+	this->pen_orign_ = pen;
+	this->line_left_ = pen.x;
+	this->bounds_.left = pen.x;
+	this->bounds_.top = pen.y;
+}
+
+void zyTextLayout::addText( const std::string text, size_t length /*= 0 */)
+{
+ 	const char* text_u8 = text.c_str();
+	if ( !ftgl::is_uft8( text_u8 ) )
+	{
+		//如果不是utf8编码，就认为是GBK编码的;
+		//略有不严谨，但是在中文环境下管用;
+		text_u8 = ftgl::GBK_to_utf8( text.c_str() );
+	}
 
 	if( length == 0 )
 	{
-		length = utf8_strlen(text);
+		length = utf8_strlen( text_u8 );
 	}
+
 
 	const char* prev_character = NULL;
 
-	if( this->buffer_.empty() )
-	{
-		this->pen_orign_ = *pen;
-		this->line_left_ = pen->x;
-		this->bounds_.left = pen->x;
-		this->bounds_.top = pen->y;
-	}
-	else
-	{
-		if ( pen->x < this->pen_orign_.x )
-		{
-			this->pen_orign_.x = pen->x;
-		}
-		if ( pen->y != this->pen_last_y_ )
-		{
-			this->finishLine( pen, false);
-		}
-	}
-
 	for( size_t i = 0; utf8_strlen( text_u8 + i ) && length; i += utf8_surrogate_len( text_u8 + i ) )
 	{
-		this->addChar( pen, text_u8 + i, prev_character );
-		prev_character = text + i;
+		this->addChar( text_u8 + i, prev_character );
+		prev_character = text_u8 + i;
 		length--;
 	}
-
-	this->pen_last_y_ = pen->y;
 
 	if ( this->font_->getUpdateFlag() )
 	{
 		this->font_->setUpdateFlag( false );
 
-// 		unsigned char* map;
-// 		
-// 		ftgl::texture_atlas* atlas = this->font_->getAtlas();
-// 
-// 		map = ftgl::make_distance_mapb( atlas->getData(), atlas->getWidth(), atlas->getHeight()  );
-// 		
-// 		memcpy( this->font_->getAtlas()->getData(), map, atlas->getWidth()*atlas->getHeight()*sizeof( unsigned char ) );
-// 		
-// 		free(map);
+		//this->font_->getAtlas()->makeDistanceField();
 
 		this->font_->getAtlas()->upload();
 	}
 	
+	if ( pen_current_.x != pen_orign_.x )
+	{
+		this->finishLine( true );
+	}
 
-	delete []text_u8;
+	//delete []text_u8;
 }
 
-void zy_text_layout::addChar(glm::vec2* pen, const char* current, const char* previous)
+void zyTextLayout::clear()
+{
+	this->lines_.clear();
+	this->buffer_.clear();
+
+	this->line_start_ = 0;
+	this->pen_current_	= pen_orign_;
+	this->line_left_	= pen_orign_.x;
+	this->bounds_.left	= pen_orign_.x;
+	this->bounds_.top	= pen_orign_.y;
+	this->bounds_.width = 0;
+	this->bounds_.height = 0;
+}
+
+void zyTextLayout::addChar( const char* current, const char* previous )
 {
 
 	texture_glyph *glyph;
-	texture_glyph *black;
+	//texture_glyph *black;
 	float kerning = 0.0f;
 
-	this->line_descender_ = this->font_->getDescender();
-	this->line_ascender_ = this->font_->getAscender();
-	//
-
+	
 	if( *current == '\n' )
 	{
-		this->finishLine( pen, true );
+		this->finishLine( true );
 		return;
 	}
 
 	glyph = this->font_->getGlyph(  current );
-	black = this->font_->getGlyph( NULL );
+	//black = this->font_->getGlyph( NULL );
 
 	if( glyph == NULL )
 	{
@@ -151,22 +167,21 @@ void zy_text_layout::addChar(glm::vec2* pen, const char* current, const char* pr
 	{
 		kerning = glyph->getKerning( previous );
 	}
-	pen->x += kerning;
+	pen_current_.x += kerning;
 
 	//--大于最大行长度,进行换行;
-	float current_line_length = pen->x + glyph->advance_x;
-	if ( current_line_length > this->fixed_line_length_ )
+	float current_line_length = pen_current_.x + glyph->advance_x;
+	if ( current_line_length > this->fixed_line_length_ && this->fixed_line_length_ > 0 )
 	{
-		this->finishLine( pen, true );
+		this->finishLine(  true );
 	}
-
 
 	// Actual glyph
 
-	float x0 = ( pen->x + glyph->offset_x );
-	float y0 = (float)(int)( pen->y + glyph->offset_y );
+	float x0 = ( pen_current_.x + glyph->offset_x );
+	float y0 = (float)( pen_current_.y + glyph->offset_y );
 	float x1 = ( x0 + glyph->width );
-	float y1 = (float)(int)( y0 - glyph->height );
+	float y1 = (float)( y0 - glyph->height );
 	float s0 = glyph->s0;
 	float t0 = glyph->t0;
 	float s1 = glyph->s1;
@@ -180,16 +195,16 @@ void zy_text_layout::addChar(glm::vec2* pen, const char* current, const char* pr
 
 	this->buffer_.push_back( c );
 
-	pen->x += glyph->advance_x;
+	pen_current_.x += glyph->advance_x;
 
 }
 
-void zy_text_layout::finishLine(glm::vec2* pen, bool advancePen)
+void zyTextLayout::finishLine( bool advancePen )
 {
 	float line_left		= this->line_left_;
-	float line_right	= pen->x;
+	float line_right	= pen_current_.x;
 	float line_width	= line_right - line_left;
-	float line_top		= pen->y + this->line_ascender_;
+	float line_top		= pen_current_.y + this->line_ascender_;
 	float line_height	= this->line_ascender_ - this->line_descender_;
 	float line_bottom	= line_top - line_height;
 
@@ -217,6 +232,7 @@ void zy_text_layout::finishLine(glm::vec2* pen, bool advancePen)
 	if (line_right > this_right)
 	{
 		this->bounds_.width = line_right - this->bounds_.left;
+		this->line_length_current_ = bounds_.width;
 	}
 	if (line_bottom < this_bottom)
 	{
@@ -225,29 +241,30 @@ void zy_text_layout::finishLine(glm::vec2* pen, bool advancePen)
 
 	if ( advancePen )
 	{
-		pen->x = this->pen_orign_.x;
-		pen->y -= ( this->line_ascender_ - this->line_descender_ );
+		pen_current_.x = this->pen_orign_.x;
+		pen_current_.y -= ( this->line_ascender_ - this->line_descender_ );
 	}
 
-	this->line_descender_ = 0;
-	this->line_ascender_ = 0;
 	this->line_start_ = this->buffer_.size();
-	this->line_left_ = pen->x;
+	this->line_left_ = pen_current_.x;
 }
 
 
-void zy_text_layout::setAlign(  Align align)
+
+
+void zyTextLayout::setAlign(  Align align)
 {
-	if ( ALIGN_LEFT == align )
+	if ( this->align_ == align )
 	{
 		return;
 	}
 
+	this->align_ = align;
+
 	size_t total_items = this->buffer_.size();
 	if ( this->line_start_ != total_items )
 	{
-		glm::vec2 pen( this->pen_orign_.x, this->pen_last_y_ );
-		this->finishLine( &pen, false );
+		this->finishLine( false );
 	}
 
 	size_t i, j;
@@ -258,6 +275,12 @@ void zy_text_layout::setAlign(  Align align)
 
 	this_left = this->bounds_.left;
 	this_right = this->bounds_.left + this->bounds_.width;
+	if ( this->fixed_line_length_ > 0  )
+	{
+		this_right = this->bounds_.left + this->fixed_line_length_;
+		this->bounds_.width = this->fixed_line_length_;
+	}
+	
 	this_center = (this_left + this_right) / 2;
 
 	line_info_t* line_info;
@@ -279,9 +302,15 @@ void zy_text_layout::setAlign(  Align align)
 
 		line_right = line_info->bounds.left + line_info->bounds.width;
 
-		if ( ALIGN_RIGHT == align )
+		if ( ALIGN_RIGHT == align ) // ALIGN_RIGHT
 		{
 			dx = this_right - line_right;
+		}
+		else if ( ALIGN_LEFT == align  )
+		{
+			line_left = line_info->bounds.left;
+			dx = this_left - line_left;
+			this->bounds_.width = this->line_length_current_;
 		}
 		else // ALIGN_CENTER
 		{
@@ -300,12 +329,15 @@ void zy_text_layout::setAlign(  Align align)
 			ch->v2.vertice.x += dx;
 			ch->v3.vertice.x += dx;
 		}
+
+		line_info->bounds.left += dx;
 	}
+
 }
 
 
 
-void zy_text_layout::moveLastLine( float dy )
+void zyTextLayout::moveLastLine( float dy )
 {
 	size_t i;
 	int j;
@@ -319,3 +351,31 @@ void zy_text_layout::moveLastLine( float dy )
 		ch->v3.vertice.y -= dy;
 	}
 }
+
+void zyTextLayout::moveTo(glm::vec2& pos)
+{
+	glm::vec3 delta( pos - this->pen_orign_, 0 );
+
+	for ( int i = 0; i < this->buffer_.size(); ++i )
+	{
+		buffer_[i].v0.vertice += delta;
+		buffer_[i].v1.vertice += delta;
+		buffer_[i].v2.vertice += delta;
+		buffer_[i].v3.vertice += delta;
+	}
+
+	for ( int j = 0; j < this->lines_.size(); ++j )
+	{
+		lines_[j].bounds.left += delta.x;
+		lines_[j].bounds.top += delta.y;
+	}
+
+	this->bounds_.left += delta.x;
+	this->bounds_.top += delta.y;
+
+	this->pen_current_ += glm::vec2( delta );
+	this->pen_orign_ += glm::vec2( delta );
+	this->line_left_ += delta.x;
+
+}
+

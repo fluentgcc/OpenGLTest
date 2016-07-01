@@ -1,24 +1,26 @@
-#include "zy_font_manager.h"
+#include "zyFontManager.h"
 
-zy_font_manager* zy_font_manager::instance()
+zyFontManager* zyFontManager::instance()
 {
-	static zy_font_manager tm;
+	static zyFontManager tm;
 	return& tm;
 }
 
-zy_font_manager::~zy_font_manager()
+zyFontManager::~zyFontManager()
 {
 	delete this->font_;
 	delete this->atlas_;
 	
 }
 
-void zy_font_manager::init(size_t width, size_t height, size_t depth )
+void zyFontManager::init(size_t width, size_t height, size_t depth )
 {
-	this->atlas_ = new ftgl::texture_atlas( width, height, depth );
 
 	const char * filename = "C:/Windows/Fonts/msyh.ttf";
+	this->atlas_ = new ftgl::texture_atlas( width, height, depth );
 	this->font_ = new ftgl::texture_font( this->atlas_, 32, filename );
+	this->atlas_->enableDistanceField( true );
+
 // 	font_->setOutlineType( 1 );
 // 	font_->setOutlineThickness( 0.5 );
 
@@ -29,7 +31,7 @@ void zy_font_manager::init(size_t width, size_t height, size_t depth )
 
 }
 
-zy_font_manager::zy_font_manager()
+zyFontManager::zyFontManager()
 {
 }
 

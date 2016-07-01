@@ -19,8 +19,8 @@
 #include "utf8-utils.h"
 
 
-#include "zy_font_manager.h"
-#include "zy_text_layout.h"
+#include "zyFontManager.h"
+#include "zyTextLayout.h"
 
 #define GL_CHECK_ERRORS assert( glGetError()== GL_NO_ERROR );
 
@@ -29,7 +29,7 @@ vertex_buffer* buffer;
 texture_atlas *atlas;
 texture_font* FONT;
 
-zy_text_layout* text_layout;
+zyTextLayout* text_layout;
 
 
 glm::mat4 model, view, projection;
@@ -143,8 +143,8 @@ void Canvas::initializeGL()
 	std::cout << "\tGLSL: "			<< glGetString (  GL_SHADING_LANGUAGE_VERSION )<<endl;
 	GL_CHECK_ERRORS
 
-	glClearColor( 0.30f, 0.30f, 0.20f, 1.0f );
-	//glClearColor( 1.0f, 1.0f, 1.0f, 1.0f );
+	//glClearColor( 0.30f, 0.30f, 0.20f, 1.0f );
+	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
 
 // 	glEnable(GL_BLEND);
 // 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -182,9 +182,9 @@ void Canvas::initializeGL()
 // 	free(map);
 // 	FONT->getAtlas()->upload();
 //-----------------------------------------------------------------------------------
-	zy_font_manager::instance()->init( 512, 512, 1 );
+	zyFontManager::instance()->init( 2048, 2048, 1 );
 
-	FONT = zy_font_manager::instance()->getFont();
+	FONT = zyFontManager::instance()->getFont();
 
 	std::string vert_file = "./freetype-gl/shaders/my-sdf.vert";
 	std::string frag_file = "./freetype-gl/shaders/my-sdf.frag";
@@ -200,20 +200,23 @@ void Canvas::initializeGL()
 // 	shader.UnUse();
 
 
-	text_layout = new zy_text_layout( &shader, FONT );
+	text_layout = new zyTextLayout( FONT );
 	text_layout->setLineLength( 1000 );
 
-	glm::vec2 pos( 20,500 );
-	text_layout->addText( &pos,	"Adsfdsfefe\n"
+	//glm::vec2 pos( 2,200 );
+
+	//text_layout->setBeginPos( pos );
+	text_layout->addText(
+		 "Adsfdsfefe\n"
 		"bdfewafefaaefewq89890\n"
 		"sdfawefwfwqefqfaC\n"
 		"王送使得房价owe放假哈撒\n"
 		"撒反对撒地方去维护荣辱观\n"
 		"ada\n"
 		"af\n"
-		);
-	text_layout->setAlign( ALIGN_CENTER );
-
+		
+		) ;
+	//text_layout->setAlign( ALIGN_CENTER );
 
 	//text_layout->setAlign( Align::ALIGN_RIGHT );
 // 	glm::vec2 pos2( 20,250 );
@@ -224,7 +227,35 @@ void Canvas::initializeGL()
 // 		"撒反对撒地方去维护荣辱观\n"
 // 		);
 //-----------------------------------------------------------
+	text_layout->moveTo( glm::vec2( 2, 500 ) );
+// 	text_layout->addText( "中sfdsa1\n哇ggew\n");
+// 	text_layout->clear();
+ 	char* text2 = "会议指出，权力就是责任，责任就要担当，忠诚干净担当是党对领导干部提出的政治要求。"
+ 				"我们党95年奋斗取得的伟大成就，充分展现了共产党人的担当精神。"
+ 				"实现“两个一百年”奋斗目标、实现中华民族伟大复兴的中国梦，"
+ 				"关键是各级党组织尤其是党员领导干部要担当责任，"
+ 				"做到在党忧党，为党尽职、为民尽责。"
+ 				"只要各级领导干部心系使命、扛起责任，就没有过不去的坎。"
+ 				"要唤醒责任意识，激发担当精神，永葆党的凝聚力和战斗力。";
+	text_layout->addText( text2 );
 
+	text_layout->addText( 
+		"根据Effective C++第三版第一条款的描述，C++由以下四个“子语言”组成："
+		"1、C子语言。C++支持C语言的几乎全部功能，主要是c89的部分"
+		"在语法上与C语言仅有极微妙的差别(如括号表达式的左右值性，具体请参考C++标准文献)。"
+		"这部分功能对应于传统的面向" 
+
+		);
+
+	text_layout->setAlign( ALIGN_RIGHT );
+	text_layout->setAlign( ALIGN_CENTER );
+	
+	//text_layout->setAlign( ALIGN_LEFT );
+
+	zyFontManager::instance()->getFont()->getAtlas()->upload();
+	
+
+	
 	GL_CHECK_ERRORS
 }
 
@@ -237,7 +268,8 @@ void Canvas::paintGL()
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 
-
+// 	glScalef( 2.0, 2.0, 2.0 );
+// 	glTranslatef(0, - 250, 0 );
 	glEnable( GL_TEXTURE_2D );
  	glEnable( GL_BLEND );
  	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -296,9 +328,9 @@ void Canvas::paintGL()
 // 	glLoadIdentity();
 // 	glPushMatrix();
 // 	glLoadMatrixd( glm::value_ptr( this->model_view_ ) );
-
+	shader.Use();
 	text_layout->render();
-
+	shader.UnUse();
 	glBindTexture( GL_TEXTURE_2D, 0 );
 
 	auto a = text_layout->getBounds();
@@ -354,7 +386,8 @@ void Canvas::resizeGL( int w, int h )
 	this->width_ = w;
 	this->height_ = h;
 
-	glViewport ( 0, 0, ( GLsizei ) w, ( GLsizei ) h );
+	//glViewport ( 0, 0, ( GLsizei ) w, ( GLsizei ) h );
+	glViewport ( 0, 0, ( GLsizei ) w /2, ( GLsizei ) h /2 );
 
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
@@ -366,6 +399,7 @@ void Canvas::resizeGL( int w, int h )
 
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
+
 }
 
 void Canvas::mouseMoveEvent( QMouseEvent* event )

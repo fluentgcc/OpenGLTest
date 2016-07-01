@@ -58,9 +58,9 @@ void ftgl::text_buffer::render()
 	glEnable( GL_BLEND );
 
 	glActiveTexture( GL_TEXTURE0 );
-	glBindTexture( GL_TEXTURE_2D, this->manager->atlas->id );
+	glBindTexture( GL_TEXTURE_2D, this->manager->atlas->id_ );
 
-	if( this->manager->atlas->depth == 1 )
+	if( this->manager->atlas->depth_ == 1 )
 	{
 		//glDisable( GL_COLOR_MATERIAL );
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
@@ -84,7 +84,7 @@ void ftgl::text_buffer::render()
 	this->shader.Use()
 	{
 		glUniform1i( this->shader_texture, 0 );
-		glUniform3f( this->shader_pixel, 1.0f/this->manager->atlas->width, 1.0f/this->manager->atlas->height, (float)this->manager->atlas->depth );
+		glUniform3f( this->shader_pixel, 1.0f/this->manager->atlas->width_, 1.0f/this->manager->atlas->height_, (float)this->manager->atlas->depth_ );
 		this->buffer->render( GL_TRIANGLES );
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		glBlendColor( 0, 0, 0, 0 );

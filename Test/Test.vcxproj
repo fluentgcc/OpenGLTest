@@ -96,9 +96,9 @@
     <ClCompile Include="freetype-gl\vector_t.cpp" />
     <ClCompile Include="freetype-gl\vertex-attribute.cpp" />
     <ClCompile Include="freetype-gl\vertex-buffer.cpp" />
-    <ClCompile Include="freetype-gl\zy_font_manager.cpp" />
-    <ClCompile Include="freetype-gl\zy_text_layout.cpp" />
-    <ClCompile Include="freetype-gl\zy_text_anno.cpp" />
+    <ClCompile Include="freetype-gl\zyFontManager.cpp" />
+    <ClCompile Include="freetype-gl\zyTextLayout.cpp" />
+    <ClCompile Include="freetype-gl\zyTextAnno.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_Canvas.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
@@ -200,9 +200,9 @@
     <ClInclude Include="freetype-gl\vector_t.h" />
     <ClInclude Include="freetype-gl\vertex-attribute.h" />
     <ClInclude Include="freetype-gl\vertex-buffer.h" />
-    <ClInclude Include="freetype-gl\zy_font_manager.h" />
-    <ClInclude Include="freetype-gl\zy_text_layout.h" />
-    <ClInclude Include="freetype-gl\zy_text_anno.h" />
+    <ClInclude Include="freetype-gl\zyFontManager.h" />
+    <ClInclude Include="freetype-gl\zyTextLayout.h" />
+    <ClInclude Include="freetype-gl\zyTextAnno.h" />
     <ClInclude Include="OpenGL\Camera\AbstractCamera.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>

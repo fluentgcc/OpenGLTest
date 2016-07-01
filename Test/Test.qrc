@@ -1,4 +1,17 @@
 <RCC>
-    <qresource prefix="Test">
+    <qresource prefix="/Test">
+        <file>freetype-gl/shaders/cube.frag</file>
+        <file>freetype-gl/shaders/cube.vert</file>
+        <file>freetype-gl/shaders/distance-field.frag</file>
+        <file>freetype-gl/shaders/distance-field.vert</file>
+        <file>freetype-gl/shaders/distance-field-2.frag</file>
+        <file>freetype-gl/shaders/my-sdf.frag</file>
+        <file>freetype-gl/shaders/my-sdf.vert</file>
+        <file>freetype-gl/shaders/text.frag</file>
+        <file>freetype-gl/shaders/text.vert</file>
+        <file>freetype-gl/shaders/v3f-c4f.frag</file>
+        <file>freetype-gl/shaders/v3f-c4f.vert</file>
+        <file>freetype-gl/shaders/v3f-t2f-c4f.frag</file>
+        <file>freetype-gl/shaders/v3f-t2f-c4f.vert</file>
     </qresource>
 </RCC>

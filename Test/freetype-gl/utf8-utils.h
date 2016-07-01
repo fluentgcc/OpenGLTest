@@ -45,6 +45,11 @@ namespace ftgl
 	const char*
 		GBK_to_utf8( const char * character );
 
+	/*
+	检验一个字符串是不是utf8编码的
+	*/
+	bool
+		is_uft8( const char* str );
 }
 
 /**

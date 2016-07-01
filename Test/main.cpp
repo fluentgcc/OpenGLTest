@@ -6,6 +6,10 @@
 #include "myWidget.h"
 #include "Canvas.h"
 
+#include <string>
+#include <sstream>
+#include <iostream>
+#include <memory>
 
 int main(int argc, char *argv[])
 {
@@ -13,6 +17,7 @@ int main(int argc, char *argv[])
 
 	Canvas w;
 	w.show();
+
 	return app.exec();
 
 }

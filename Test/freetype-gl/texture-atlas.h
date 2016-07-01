@@ -94,13 +94,19 @@ namespace ftgl
 		//Remove all allocated regions from the atlas.
 		void clear();
 
-		inline size_t getWidth() { return this->width; }
-		inline size_t getHeight(){ return this->height; }
-		inline size_t getDepth() { return this->depth; }
-		inline unsigned int getTexID(){ return this->id; }
-		unsigned char* getData(){ return this->data; }
+		inline size_t getWidth() { return this->width_; }
+		inline size_t getHeight(){ return this->height_; }
+		inline size_t getDepth() { return this->depth_; }
+		inline unsigned int getTexID(){ return this->id_; }
+		unsigned char* getData(){ return this->data_; }
 
+		//必须在添加文字之前执行;对已经添加的文字没有效果;
+		void enableDistanceField( bool b ){ this->enable_distance_field_ = b; }
+
+		//慎用;
+		void makeDistanceField();
 	private:
+
 		int fit( const size_t index, const size_t width, const size_t height );
 		void merge();
 
@@ -109,17 +115,20 @@ namespace ftgl
 		//注意，修改数据时需用引用; glm::ivec3* v = &nodes[i];
 		std::vector<glm::ivec3>  nodes;			//Allocated nodes
 
-		size_t width;				//Width (in pixels) of the underlying texture
+		size_t width_;				//Width (in pixels) of the underlying texture
 
-		size_t height;				//Height (in pixels) of the underlying texture
+		size_t height_;				//Height (in pixels) of the underlying texture
 
-		size_t depth;				//Depth (in bytes) of the underlying texture
+		size_t depth_;				//Depth (in bytes) of the underlying texture
 
-		size_t used;				//Allocated surface size
+		size_t used_;				//Allocated surface size
 
-		unsigned int id;			//Texture identity (OpenGL)
+		unsigned int id_;			//Texture identity (OpenGL)
 
-		unsigned char * data;		//Atlas data
+		unsigned char * data_;		//Atlas data
+
+
+		bool enable_distance_field_;
 
 	};
 }

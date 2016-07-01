@@ -3,7 +3,7 @@
 
 #include <freetype-gl.h>
 #include <glm/glm.hpp>
-#include <GLSLShader.h>
+#include <QString>
 
 enum Align
 {	
@@ -54,23 +54,32 @@ struct line_info_t
 
 };
 
+/*
+注意该类的使用流程：
 
-class zy_text_layout
+*/
+
+
+class zyTextLayout
 {
 public:
-	zy_text_layout(  GLSLShader* shader, texture_font* ft );
-	~zy_text_layout();
+	zyTextLayout( texture_font* ft );
+	~zyTextLayout();
 	
 	//需在添加文字之前设置;
 	void setLineLength( float length ){ this->fixed_line_length_ = length; };
+	void setBeginPos( glm::vec2& pen );
 
 	//添加一段文字;
-	void addText( glm::vec2* pen , const char* text, size_t length = 0 );
+	void addText( const std::string text, size_t length = 0 );
 	void clear();
 	
 	//添加文字之后设置;
 	void setAlign(  Align align );
 	Align getAlign(){ return this->align_; }
+
+	//将所有文字整体移动;
+	void moveTo( glm::vec2& pos );
 
 	void render();
 
@@ -78,13 +87,12 @@ public:
 
 	
 private:
-	void addChar( glm::vec2* pen, const char* current, const char* previous );
+	void addChar( const char* current, const char* previous );
 
-	void finishLine( glm::vec2* pen, bool advancePen );
+	void finishLine( bool advancePen );
 	void moveLastLine( float dy );
 
 private:
-	GLSLShader* shader_;
 	ftgl::texture_font* font_;
 
 	Align align_;
@@ -93,7 +101,8 @@ private:
 	bounds_t bounds_;
 
 	glm::vec2 pen_orign_;		//Pen origin;
-	float	  pen_last_y_;		//Last pen y location;
+	glm::vec2 pen_current_;
+
 	size_t	  line_start_;		//Index of the current line start;
 	float	  line_left_;		//Location of the start of the line;
 	float	  line_ascender_;	//Current line ascender;
@@ -110,6 +119,10 @@ private:
 	//---------设置最大的行长度;--------
 	//小于等于0 时按字符自动计算;
 	float fixed_line_length_;
+
+	//当前最大行长度;
+	float line_length_current_;
+
 };
 
 #endif

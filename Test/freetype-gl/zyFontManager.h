@@ -15,11 +15,11 @@ class font_info
 //目前只管理一种字体;
 //todo: 可加多种字体，字体描述等等;
 
-class zy_font_manager 
+class zyFontManager 
 {
 public:
-	static zy_font_manager* instance();
-	~zy_font_manager();
+	static zyFontManager* instance();
+	~zyFontManager();
 
 	//使用之前必须执行;参数为创建atles的大小;
 	void init(  size_t width, size_t height, size_t depth = 1 );
@@ -29,7 +29,7 @@ public:
 	ftgl::texture_font* getFont(){ return this->font_; }
 			   
 private:	   
-	zy_font_manager();
+	zyFontManager();
 
 private:
 

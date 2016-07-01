@@ -6,6 +6,7 @@
 #include "opengl.h"
 #include "texture-atlas.h"
 
+#include "distance-field.h"
 
 ftgl::texture_atlas::texture_atlas(const size_t width, const size_t height, const size_t depth)
 {
@@ -15,18 +16,18 @@ ftgl::texture_atlas::texture_atlas(const size_t width, const size_t height, cons
 
 	assert( (depth == 1) || (depth == 3) || (depth == 4) );
 
-	this->used = 0;
-	this->width = width;
-	this->height = height;
-	this->depth = depth;
-	this->id = 0;
+	this->used_ = 0;
+	this->width_ = width;
+	this->height_ = height;
+	this->depth_ = depth;
+	this->id_ = 0;
 
 	this->nodes.push_back( node );
 
 	//·ÖÅä¿Õ¼ä;
-	this->data = ( unsigned char * )calloc( width * height * depth, sizeof( unsigned char ) );
+	this->data_ = ( unsigned char * )calloc( width * height * depth, sizeof( unsigned char ) );
 
-	if( this->data == NULL)
+	if( this->data_ == NULL)
 	{
 		fprintf( stderr,
 			"line %d: No more memory for allocating data\n", __LINE__ );
@@ -38,45 +39,45 @@ ftgl::texture_atlas::~texture_atlas()
 {
 	this->nodes.clear();
 
-	if( this->data )
+	if( this->data_ )
 	{
-		free( this->data );
+		free( this->data_ );
 	}
-	if( this->id )
+	if( this->id_ )
 	{
-		glDeleteTextures( 1, &this->id );
+		glDeleteTextures( 1, &this->id_ );
 	}
 }
 
 void ftgl::texture_atlas::upload()
 {
-	assert( this->data );
+	assert( this->data_ );
 
-	if( !this->id )
+	if( !this->id_ )
 	{
-		glGenTextures( 1, &this->id );
+		glGenTextures( 1, &this->id_ );
 	}
 
-	glBindTexture( GL_TEXTURE_2D, this->id );
+	glBindTexture( GL_TEXTURE_2D, this->id_ );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
-	if( this->depth == 4 )
+	if( this->depth_ == 4 )
 	{
 #ifdef GL_UNSIGNED_INT_8_8_8_8_REV
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, this->width, this->height,
-			0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, this->data );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, this->width_, this->height_,
+			0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, this->data_ );
 #else
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, self->width, self->height,
 			0, GL_RGBA, GL_UNSIGNED_BYTE, self->data );
 #endif
 	}
-	else if( this->depth == 3 )
+	else if( this->depth_ == 3 )
 	{
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, this->width, this->height,
-			0, GL_RGB, GL_UNSIGNED_BYTE, this->data );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, this->width_, this->height_,
+			0, GL_RGB, GL_UNSIGNED_BYTE, this->data_ );
 	}
 	else
 	{
@@ -84,8 +85,8 @@ void ftgl::texture_atlas::upload()
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_LUMINANCE, self->width, self->height,
 			0, GL_LUMINANCE, GL_UNSIGNED_BYTE, self->data );
 #else
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RED, this->width, this->height,
-			0, GL_RED, GL_UNSIGNED_BYTE, this->data );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RED, this->width_, this->height_,
+			0, GL_RED, GL_UNSIGNED_BYTE, this->data_ );
 #endif
 	}
 }
@@ -163,12 +164,12 @@ glm::ivec4 ftgl::texture_atlas::getRegion(const size_t width, const size_t heigh
 	}
 	
 	this->merge( );
-	this->used += width * height;
+	this->used_ += width * height;
 	
 	return region;
 }
 
-void ftgl::texture_atlas::setRegion(const size_t x, const size_t y, const size_t width, const size_t height, const unsigned char *data, const size_t stride)
+void ftgl::texture_atlas::setRegion(const size_t x, const size_t y, const size_t width, const size_t height, const unsigned char *pix_data, const size_t stride)
 {
 	size_t i;
 	size_t depth;
@@ -176,34 +177,63 @@ void ftgl::texture_atlas::setRegion(const size_t x, const size_t y, const size_t
 
 	assert( x > 0 );
 	assert( y > 0 );
-	assert( x < ( this->width-1 ) );
-	assert( ( x + width ) <= ( this->width-1 ) );
-	assert( y < ( this->height-1 ) );
-	assert( ( y + height ) <= ( this->height-1 ) );
+	assert( x < ( this->width_-1 ) );
+	assert( ( x + width ) <= ( this->width_-1 ) );
+	assert( y < ( this->height_-1 ) );
+	assert( ( y + height ) <= ( this->height_-1 ) );
 
-	depth = this->depth;
+	depth = this->depth_;
 	charsize = sizeof( char );
-	for( i=0; i<height; ++i )
+
+	
+	if ( this->enable_distance_field_ )
 	{
-		memcpy( this->data+( ( y+i )* this->width + x ) * charsize * depth,
-			data + ( i*stride ) * charsize, width * charsize * depth  );
+		unsigned char* mapb = NULL;
+		mapb = ftgl::make_distance_mapb( const_cast<unsigned char*> ( pix_data ), width, height );
+		
+		for( i=0; i < height; ++i )
+		{
+			memcpy( this->data_+( ( y+i )* this->width_ + x ) * charsize * depth,
+				mapb + ( i*stride ) * charsize, width * charsize * depth  );
+		}
+
+		free( mapb );
 	}
+	else
+	{
+		
+		for( i=0; i < height; ++i )
+		{
+			memcpy( this->data_+( ( y+i )* this->width_ + x ) * charsize * depth,
+				pix_data + ( i*stride ) * charsize, width * charsize * depth  );
+		}
+	}
+	
 }
 
 void ftgl::texture_atlas::clear()
 {
 	glm::ivec3 node( 1, 1, 1 );
 
-	assert( this->data );
+	assert( this->data_ );
 
 	this->nodes.clear();
-	this->used = 0;
+	this->used_ = 0;
 	// We want a one pixel border around the whole atlas to avoid any artefact when
 	// sampling texture
-	node.z = this->width-2;
+	node.z = this->width_-2;
 
 	this->nodes.push_back( node );
-	memset( this->data, 0, this->width * this->height * this->depth );
+	memset( this->data_, 0, this->width_ * this->height_ * this->depth_ );
+}
+
+void ftgl::texture_atlas::makeDistanceField()
+{
+	unsigned char* mapb = ftgl::make_distance_mapb( const_cast<unsigned char*> ( this->data_ ), width_, height_ );
+	free( this->data_ );
+
+	this->data_ = mapb;
+
 }
 
 int ftgl::texture_atlas::fit(const size_t index, const size_t width, const size_t height)
@@ -222,7 +252,7 @@ int ftgl::texture_atlas::fit(const size_t index, const size_t width, const size_
 	width_left = width;
 	i = index;
 
-	if ( ( x + width ) > ( this->width-1 ) )
+	if ( ( x + width ) > ( this->width_-1 ) )
 	{
 		return -1;
 	}
@@ -235,7 +265,7 @@ int ftgl::texture_atlas::fit(const size_t index, const size_t width, const size_
 		{
 			y = node->y;
 		}
-		if( ( y + height ) > (this->height - 1 ) )
+		if( ( y + height ) > (this->height_ - 1 ) )
 		{
 			return -1;
 		}
